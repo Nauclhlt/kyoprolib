@@ -1,5 +1,5 @@
 // 重み付き(重みなし)の無向グラフを管理する.
-// Depends on: Edge<T>
+// Depends on: Edge<T>, UnionFind
 // @author Nauclhlt.
 public sealed class Graph<T> where T : struct, INumber<T>
 {
@@ -133,6 +133,10 @@ public sealed class Graph<T> where T : struct, INumber<T>
     public T TreeDiameter()
     {
         if (_seen is null) throw new Exception("call SetupSearch.");
+        if (_edges.Count != _vertexCount - 1)
+        {
+            throw new Exception("Not a tree graph.");
+        }
 
         T[] dist = new T[_vertexCount];
 

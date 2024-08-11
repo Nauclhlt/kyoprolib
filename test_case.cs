@@ -1,5 +1,5 @@
 // テストケースをランダム生成する.
-// 
+// @author Nauclhlt.
 public static class TestCase
 {
     private static Random _random = new Random();

@@ -1,5 +1,6 @@
-// modintの階乗とその逆元を計算する.
-// 前計算O(max). 階乗, 順列, 二項係数それぞれ定数時間.
+// modintの階乗とその逆元を前計算して高速化.
+// 前計算O(最大値). 階乗, 順列, 二項係数それぞれ定数時間.
+// Depends on: ModInt
 // @author Nauclhlt.
 public sealed class ModFactorialCache
 {
