@@ -1,16 +1,17 @@
-// 素集合データ構造(Disjoint Set Union)を管理する.
-// @author Nauclhlt.
-public sealed class UnionFind
+// 重み(ポテンシャル)付きUnion-Find.
+public sealed class WeightedUnionFind<T> where T : struct, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
 {
     private int[] _parents;
+    private T[] _weights;
     private int _size;
 
     public int Size => _size;
 
-    public UnionFind(int n)
+    public WeightedUnionFind(int n)
     {
         _size = n;
         _parents = new int[n];
+        _weights = new T[n];
         for (int i = 0; i < n; i++)
         {
             _parents[i] = i;
@@ -21,16 +22,35 @@ public sealed class UnionFind
     {
         if (_parents[x] == x)
             return x;
-        return _parents[x] = Root(_parents[x]);
+        
+        int root = Root(_parents[x]);
+        _weights[x] += _weights[_parents[x]];
+        return _parents[x] = root;
     }
 
-    public void Unite(int x, int y)
+    public T Weight(int x)
     {
+        Root(x);
+        return _weights[x];
+    }
+
+    public T WeightDifference(int x, int y)
+    {
+        return Weight(y) - Weight(x);
+    }
+
+    public void Unite(int x, int y, T weight)
+    {
+        weight += Weight(x);
+        weight -= Weight(y);
+
         int rootX = Root(x);
         int rootY = Root(y);
         if (rootX == rootY)
             return;
-        _parents[rootX] = rootY;
+        
+        _parents[rootY] = rootX;
+        _weights[rootY] = weight;
     }
 
     public List<int> Find(int x)
