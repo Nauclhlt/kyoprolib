@@ -7,19 +7,38 @@ public sealed class DirectedGraph<T> where T : struct, INumber<T>
     private List<Edge<T>> _edges;
     private bool[] _seen;
     private int _vertexCount;
+    private List<List<Edge<T>>> _reverseGraph;
+    private List<Edge<T>> _reverseEdges;
+    private bool _hasReverse = false;
 
     public int VertexCount => _vertexCount;
     public bool[] Seen => _seen;
     public List<List<Edge<T>>> RawGraph => _graph;
     public List<Edge<T>> Edges => _edges;
+    public List<List<Edge<T>>> ReverseGraph => _reverseGraph;
+    public List<Edge<T>> ReverseEdges => _reverseEdges;
 
     public DirectedGraph(int vertexCount)
+        : this (vertexCount, false)
     {
+        
+    }
+
+    public DirectedGraph(int vertexCount, bool hasReverse = false)
+    {
+        _hasReverse = hasReverse;
         _vertexCount = vertexCount;
         _graph = new(_vertexCount);
         _edges = new List<Edge<T>>(_vertexCount);
+        if (_hasReverse)
+        {
+            _reverseGraph = new(_vertexCount);
+            _reverseEdges = new(_vertexCount);
+        }
         for (int i = 0; i < _vertexCount; i++)
         {
+            if (_hasReverse)
+                _reverseGraph.Add(new());
             _graph.Add(new());
         }
     }
@@ -31,6 +50,13 @@ public sealed class DirectedGraph<T> where T : struct, INumber<T>
         Edge<T> edge = new Edge<T>(from, to, weight);
         _graph[from].Add(edge);
         _edges.Add(edge);
+
+        if (_hasReverse)
+        {
+            Edge<T> revEdge = new(to, from, weight);
+            _reverseGraph[to].Add(revEdge);
+            _reverseEdges.Add(revEdge);
+        }
     }
 
     public void SetupSearch()
@@ -105,7 +131,7 @@ public sealed class DirectedGraph<T> where T : struct, INumber<T>
     }
 
     // トポロジカルソートをする.
-    // 戻り地がtrueなら成功, falseなら失敗, つまり有向閉路が含まれる.
+    // 戻り値がtrueなら成功, falseなら失敗, つまり有向閉路が含まれる.
     public bool TryTopologicalSort(out List<int> sorted)
     {
         sorted = new List<int>(_vertexCount);
@@ -144,7 +170,7 @@ public sealed class DirectedGraph<T> where T : struct, INumber<T>
     }
 
     // Uniqueにトポロジカルソートをする.
-    // 戻り地がtrueなら成功, falseなら失敗, 有向閉路が含まれるまたは順序が一通りに定まらない.
+    // 戻り値がtrueなら成功, falseなら失敗, 有向閉路が含まれるまたは順序が一通りに定まらない.
     public bool TryUniqueTopologicalSort(out List<int> sorted)
     {
         sorted = new List<int>(_vertexCount);
@@ -184,6 +210,83 @@ public sealed class DirectedGraph<T> where T : struct, INumber<T>
         }
 
         return sorted.Count == _vertexCount;
+    }
+
+    public List<List<int>> SplitSCC()
+    {
+        if (_seen is null) throw new Exception("call SetupSearch.");
+        if (!_hasReverse) throw new Exception("Reverse graph required.");
+
+        Array.Clear(_seen);
+
+        int[] t = new int[_vertexCount];
+
+        int seenIndex = 1;
+        void dfs1(int n)
+        {
+            _seen[n] = true;
+
+            var ch = _graph[n];
+            for (int i = 0; i < ch.Count; i++)
+            {
+                if (!_seen[ch[i].To])
+                    dfs1(ch[i].To);
+            }
+
+            t[n] = seenIndex;
+            seenIndex++;
+        }
+
+        for (int i = 0; i < _vertexCount; i++)
+        {
+            if (!_seen[i])
+            {
+                dfs1(i);
+            }
+        }
+
+        
+
+        Array.Clear(_seen);
+
+        PriorityQueue<int, int> pq = new();
+        for (int i = 0; i < _vertexCount; i++)
+        {
+            pq.Enqueue(i, -t[i]);
+        }
+
+        List<List<int>> res = new();
+
+        Stack<int> stack = new();
+        while (pq.Count > 0)
+        {
+            int p = pq.Dequeue();
+            if (_seen[p]) continue;
+
+            List<int> list = new();
+
+            stack.Push(p);
+
+            while (stack.Count > 0)
+            {
+                int n = stack.Pop();
+
+                if (_seen[n]) continue;
+
+                _seen[n] = true;
+                list.Add(n);
+
+                var ch = _reverseGraph[n];
+                for (int j = 0; j < ch.Count; j++)
+                {
+                    stack.Push(ch[j].To);
+                }
+            }
+
+            res.Add(list);
+        }
+
+        return res;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
