@@ -26,6 +26,8 @@ public sealed class LowHighSet<T> : IEnumerable<T> where T : struct, INumber<T>
         _k = k;
     }
 
+    // itemを要素に追加する.
+    // O(logN)
     public void Add(T item)
     {
         if (_low.Count < _k)
@@ -46,6 +48,8 @@ public sealed class LowHighSet<T> : IEnumerable<T> where T : struct, INumber<T>
         }
     }
 
+    // itemを削除する.
+    // O(logN)
     public bool Remove(T item)
     {
         if (_low.Count < _k)
@@ -116,36 +120,50 @@ public sealed class LowHighSet<T> : IEnumerable<T> where T : struct, INumber<T>
         InsertHigh(max);
     }
 
+    // itemを含むかを返す.
+    // O(logN)
     public bool Contains(T item)
     {
         return _high.Contains(item) || _low.Contains(item);
     }
 
+    // itemが下位k個より大きい部分に入っているかを返す.
+    // O(logN)
     public bool HighContains(T item)
     {
         return _high.Contains(item);
     }
 
+    // itemが下位k個に入っているかを返す.
+    // O(logN)
     public bool LowContains(T item)
     {
         return _low.Contains(item);
     }
 
+    // itemがいくつ含まれているかを返す.
+    // O(1)
     public int CountOf(T item)
     {
         return _high.CountOf(item) + _low.CountOf(item);
     }
 
+    // itemが下位k個より大きい部分にいくつ含まれているかを返す.
+    // O(1)
     public int HighCountOf(T item)
     {
         return _high.CountOf(item);
     }
 
+    // itemが下位k個にいくつ含まれているかを返す.
+    // O(1)
     public int LowCountOf(T item)
     {
         return _low.CountOf(item);
     }
 
+    // 中身をクリアする.
+    // O(1)
     public void Clear()
     {
         _high.Clear();
@@ -189,6 +207,8 @@ public sealed class HighLowSet<T> : IEnumerable<T> where T : struct, INumber<T>
         _k = k;
     }
 
+    // itemを要素に追加する.
+    // O(logN)
     public void Add(T item)
     {
         if (_high.Count < _k)
@@ -209,6 +229,8 @@ public sealed class HighLowSet<T> : IEnumerable<T> where T : struct, INumber<T>
         }
     }
 
+    // itemを削除する.
+    // O(logN)
     public bool Remove(T item)
     {
         if (_high.Count < _k)
@@ -279,36 +301,50 @@ public sealed class HighLowSet<T> : IEnumerable<T> where T : struct, INumber<T>
         InsertHigh(max);
     }
 
+    // itemを含むかを返す.
+    // O(1)
     public bool Contains(T item)
     {
         return _high.Contains(item) || _low.Contains(item);
     }
 
+    // itemが上位k個に入っているかを返す.
+    // O(1)
     public bool HighContains(T item)
     {
         return _high.Contains(item);
     }
 
+    // itemが上位k個より小さい部分に入っているかを返す.
+    // O(1)
     public bool LowContains(T item)
     {
         return _low.Contains(item);
     }
 
+    // itemがいくつ含まれているかを返す.
+    // O(1)
     public int CountOf(T item)
     {
         return _high.CountOf(item) + _low.CountOf(item);
     }
 
+    // itemが上位k個にいくつ含まれているかを返す.
+    // O(1)
     public int HighCountOf(T item)
     {
         return _high.CountOf(item);
     }
 
+    // itemが上位k個より小さい部分にいくつ含まれているかを返す.
+    // O(1)
     public int LowCountOf(T item)
     {
         return _low.CountOf(item);
     }
 
+    // 中身をクリアする.
+    // O(1)
     public void Clear()
     {
         _high.Clear();

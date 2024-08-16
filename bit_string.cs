@@ -13,6 +13,8 @@ struct BitString32
     public int Bit => _bit;
     public int Length => _length;
 
+    // ランダムアクセス.
+    // O(1)
     public bool this[int index]
     {
         get
@@ -43,6 +45,8 @@ struct BitString32
         }
     }
 
+    // 末尾に追加する. 101に1を追加 => 011
+    // O(1)
     public BitString32 Append(bool v)
     {
         if (v)
@@ -51,6 +55,8 @@ struct BitString32
             return new BitString32(_length, (_bit >> 1));
     }
 
+    // 先頭に追加する. 101に1を追加 => 110
+    // O(1)
     public BitString32 Prepend(bool v)
     {
         if (v)
@@ -59,6 +65,8 @@ struct BitString32
             return new BitString32(_length, (_bit << 1) & _lengthMask);
     }
     
+    // 値をクリアする.
+    // O(1)
     public void Clear()
     {
         _bit = 0;
@@ -76,6 +84,8 @@ struct BitString32
         return StrBuilder.ToString();
     }
 
+    // 長さlengthの列を全パターン生成する.
+    // O(2^(length))
     public static List<BitString32> GenerateAll(int length)
     {
         int n = 1 << length;

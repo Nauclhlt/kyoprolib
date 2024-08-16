@@ -20,6 +20,8 @@ public readonly struct ModInt
         return a;
     }
 
+    // この値をexp乗した値を返す.
+    // O(log(exp))
     public ModInt Power(long exp)
     {
         if (exp <= -1) return this;
@@ -33,6 +35,8 @@ public readonly struct ModInt
         return m;
     }
 
+    // 逆元を返す.
+    // modintの法をPとして, O(logP)
     public ModInt Inv()
     {
         return this.Power(Constants.Mod - 2L);
@@ -94,6 +98,8 @@ public readonly struct ModInt
         return (int)m.Value;
     }
 
+    // nCrを計算する.
+    // O(r)
     public static ModInt Combination(long n, long r)
     {
         ModInt c = 1;
@@ -109,5 +115,6 @@ public readonly struct ModInt
         return Value.ToString();
     }
 
+    // 中身の値を取得する.
     public long Raw() => Value;
 }

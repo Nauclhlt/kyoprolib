@@ -4,6 +4,8 @@ public sealed class PrefixSum2D<T> where T : struct, INumber<T>
 {
     private T[,] _sums;
 
+    // sequenceの累積和を計算する.
+    // O(HW)
     public PrefixSum2D(T[,] sequence)
     {
         int height = sequence.GetLength(0);
@@ -20,11 +22,15 @@ public sealed class PrefixSum2D<T> where T : struct, INumber<T>
         }
     }
 
+    // (startInclX, startInclY)を左上, (endExclX - 1, endExclY - 1)を右下とする範囲の和を計算する.
+    // O(1)
     public T Sum(int startInclX, int startInclY, int endExclX, int endExclY)
     {
         return _sums[endExclY, endExclX] + _sums[startInclY, startInclX] - _sums[startInclY, endExclX] - _sums[endExclY, startInclX];
     }
 
+    // 全体の和を返す.
+    // O(1)
     public T AllSum()
     {
         return _sums[_sums.GetLength(0) - 1, _sums.GetLength(1) - 1];

@@ -17,6 +17,7 @@ public sealed class UnionFind
         }
     }
 
+    // xが属する木の根を返す.
     public int Root(int x)
     {
         if (_parents[x] == x)
@@ -24,6 +25,7 @@ public sealed class UnionFind
         return _parents[x] = Root(_parents[x]);
     }
 
+    // xの属する木とyの属する木を併合する.
     public void Unite(int x, int y)
     {
         int rootX = Root(x);
@@ -33,6 +35,8 @@ public sealed class UnionFind
         _parents[rootX] = rootY;
     }
 
+    // xと同じ連結成分に含まれる頂点のリストを返す.
+    // O(N)
     public List<int> Find(int x)
     {
         int rootX = Root(x);
@@ -46,6 +50,8 @@ public sealed class UnionFind
         return set;
     }
 
+    // すべての連結成分に対して頂点のリストを求める.
+    // O(N)
     public Dictionary<int, List<int>> FindAll()
     {
         Dictionary<int, List<int>> sets = new Dictionary<int, List<int>>();
@@ -61,6 +67,8 @@ public sealed class UnionFind
         return sets;
     }
 
+    // xとyが同じ連結成分に属しているかを返す.
+    // ほぼ定数時間
     public bool Same(int x, int y)
     {
         int rootX = Root(x);
@@ -68,6 +76,8 @@ public sealed class UnionFind
         return rootX == rootY;
     }
 
+    // クリアする.
+    // O(N)
     public void Clear()
     {
         for (int i = 0; i < _size; i++)

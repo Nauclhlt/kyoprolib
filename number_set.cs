@@ -21,6 +21,8 @@ public sealed class NumberSet<T> : IEnumerable<T> where T : struct, INumber<T>
         _count = 0;
     }
 
+    // itemを追加する.
+    // O(logN)
     public void Add(T item)
     {
         _count++;
@@ -32,6 +34,8 @@ public sealed class NumberSet<T> : IEnumerable<T> where T : struct, INumber<T>
         }
     }
 
+    // itemをcount個追加する.
+    // O(logN)
     public void AddMany(T item, int count)
     {
         _count += count;
@@ -43,6 +47,8 @@ public sealed class NumberSet<T> : IEnumerable<T> where T : struct, INumber<T>
         }
     }
 
+    // itemを削除する.
+    // O(logN)
     public bool Remove(T item)
     {
         if (!_countMap.ContainsKey(item)) return false;
@@ -58,11 +64,15 @@ public sealed class NumberSet<T> : IEnumerable<T> where T : struct, INumber<T>
         return true;
     }
 
+    // itemが含まれるかを返す.
+    // O(logN)
     public bool Contains(T item)
     {
         return _set.Contains(item);
     }
 
+    // 含まれるitemの数を返す.
+    // O(1)
     public int CountOf(T item)
     {
         if (_countMap.TryGetValue(item, out int res)) return res;
@@ -70,6 +80,8 @@ public sealed class NumberSet<T> : IEnumerable<T> where T : struct, INumber<T>
         return 0;
     }
 
+    // 要素をクリアする.
+    // O(1)
     public void Clear()
     {
         _set.Clear();

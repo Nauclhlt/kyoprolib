@@ -19,6 +19,8 @@ public sealed class RabinKarp
     public int Length => _source.Length;
     public string Source => _source;
 
+    // sのハッシュを前計算する.
+    // O(|s|)
     public RabinKarp(string s)
     {
         _source = s;
@@ -44,6 +46,8 @@ public sealed class RabinKarp
         }
     }
 
+    // [l, r)の範囲の部分文字列に対するハッシュを取得する.
+    // O(1)
     public RollingHash GetHash(int l, int r)
     {
         if (r < l) throw new ArgumentException("! left <= right");
@@ -56,6 +60,8 @@ public sealed class RabinKarp
         return new RollingHash(r - l, hashA, hashB);
     }
 
+    // ハッシュaとbをこの順に結合したハッシュを返す.
+    // O(1)
     public RollingHash Concat(RollingHash a, RollingHash b)
     {
         long destA = (_powersA[b.Length] * a.HashA + b.HashA) % ModA;

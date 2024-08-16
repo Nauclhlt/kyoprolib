@@ -67,6 +67,8 @@ public sealed class Trie
         _root = new TrieNode('_');
     }
 
+    // itemを追加する.
+    // O(|item|)
     public void Add(string item)
     {
         if (item is null || item.Length == 0) return;
@@ -94,6 +96,8 @@ public sealed class Trie
         current.Terminate = true;
     }
 
+    // itemを削除する.
+    // O(|item|)
     public void Remove(string item)
     {
         if (item is null || item.Length == 0) return;
@@ -131,6 +135,8 @@ public sealed class Trie
         }
     }
 
+    // itemが含まれるかを返す.
+    // O(|item|)
     public bool Contains(string item)
     {
         if (item is null || item.Length == 0) return false;
@@ -154,6 +160,8 @@ public sealed class Trie
         return current.Terminate;
     }
 
+    // 含まれる文字列それぞれにsに対する最長共通接頭辞の長さの最大値を返す.
+    // O(|S|)
     public int LcpLength(string s)
     {
         if (s is null || s.Length == 0) return 0;
@@ -205,6 +213,8 @@ public sealed class Trie
         return res;
     }
 
+    // 含まれる文字列のうち, prefixを接頭辞とする文字列のリストを返す.
+    // O(N)
     public List<string> PrefixEntries(string prefix)
     {
         if (prefix is null || prefix.Length == 0)
@@ -231,11 +241,15 @@ public sealed class Trie
         return AllEntriesFrom(prefix, current);
     }
 
+    // 含まれるすべての文字列のリストを返す.
+    // O(N)
     public List<string> AllEntries()
     {
         return AllEntriesFrom(string.Empty, _root);
     }
 
+    // 含まれる文字列のうちprefixを接頭辞とするものの数を返す.
+    // O(|prefix|)
     public int CountPrefix(string prefix)
     {
         if (prefix is null || prefix.Length == 0) return 0;

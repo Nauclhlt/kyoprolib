@@ -43,6 +43,8 @@ public sealed class DirectedGraph<T> where T : struct, INumber<T>
         }
     }
 
+    // 頂点from -> toに重みweightの有向辺を追加する.
+    // O(1)
     public void AddEdge(int from, int to, T weight)
     {
         if (!Validate(from) || !Validate(to)) return;
@@ -59,11 +61,14 @@ public sealed class DirectedGraph<T> where T : struct, INumber<T>
         }
     }
 
+    // 探索用の配列を作成する.
     public void SetupSearch()
     {
         _seen = new bool[_vertexCount];
     }
 
+    // 頂点nからBFSをしてそれぞれの頂点にはじめに訪問したときのパスの重みの合計を配列に格納する.
+    // O(V+E)
     public void BfsFrom(int n, T[] map)
     {
         if (!Validate(n)) return;
@@ -95,6 +100,8 @@ public sealed class DirectedGraph<T> where T : struct, INumber<T>
         }
     }
 
+    // 頂点nからDijkstra法を用いてそれぞれの頂点に対する最短経路を求める.
+    // O(VlogE)
     public void DijkstraFrom(int n, T[] map)
     {
         if (!Validate(n)) return;
@@ -132,6 +139,7 @@ public sealed class DirectedGraph<T> where T : struct, INumber<T>
 
     // トポロジカルソートをする.
     // 戻り値がtrueなら成功, falseなら失敗, つまり有向閉路が含まれる.
+    // O(V+E)
     public bool TryTopologicalSort(out List<int> sorted)
     {
         sorted = new List<int>(_vertexCount);
@@ -171,6 +179,7 @@ public sealed class DirectedGraph<T> where T : struct, INumber<T>
 
     // Uniqueにトポロジカルソートをする.
     // 戻り値がtrueなら成功, falseなら失敗, 有向閉路が含まれるまたは順序が一通りに定まらない.
+    // O(V+E)
     public bool TryUniqueTopologicalSort(out List<int> sorted)
     {
         sorted = new List<int>(_vertexCount);
@@ -212,6 +221,8 @@ public sealed class DirectedGraph<T> where T : struct, INumber<T>
         return sorted.Count == _vertexCount;
     }
 
+    // グラフを強連結成分分解する.
+    // O(V+E)
     public List<List<int>> SplitSCC()
     {
         if (_seen is null) throw new Exception("call SetupSearch.");

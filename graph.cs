@@ -27,6 +27,8 @@ public sealed class Graph<T> where T : struct, INumber<T>
         }
     }
 
+    // 頂点fromとtoの間に重みweightの無向辺を追加する.
+    // O(1)
     public void AddEdge(int a, int b, T weight)
     {
         if (!Validate(a) || !Validate(b)) return;
@@ -36,6 +38,8 @@ public sealed class Graph<T> where T : struct, INumber<T>
         _edges.Add(new Edge<T>(a, b, weight));
     }
 
+    // このグラフの連結の状態を表すDSUを生成する.
+    // O(V+E)
     public void SetupDSU()
     {
         _uf = new UnionFind(_vertexCount);
@@ -45,24 +49,31 @@ public sealed class Graph<T> where T : struct, INumber<T>
         }
     }
 
+    // 探索用の配列を作成する.
     public void SetupSearch()
     {
         _seen = new bool[_vertexCount];
     }
 
+    // 頂点a, bが同じ連結成分に属するかを判定する.
+    // ほぼ定数時間
     public bool Same(int a, int b)
     {
-        if (_uf is null) return false;
+        if (_uf is null) throw new Exception("Call SetupSearch.");
 
         return _uf.Same(a, b);
     }
 
+    // 連結成分ごとに頂点のリストを返す.
+    // O(V)
     public Dictionary<int, List<int>> GetConnectedComponents()
     {
-        if (_uf is null) return null;
+        if (_uf is null) throw new Exception("Call SetupSearch.");
         return _uf.FindAll();
     }
 
+    // 頂点nからDijkstra法を用いてそれぞれの頂点に対する最短経路を求める.
+    // O(VlogE)
     public void DijkstraFrom(int n, T[] map)
     {
         if (!Validate(n)) return;
@@ -98,6 +109,8 @@ public sealed class Graph<T> where T : struct, INumber<T>
         }
     }
 
+    // 頂点nからBFSをしてそれぞれの頂点にはじめに訪問したときのパスの重みの合計を配列に格納する.
+    // O(V+E)
     public void BfsFrom(int n, T[] map)
     {
         if (!Validate(n)) return;
@@ -129,7 +142,8 @@ public sealed class Graph<T> where T : struct, INumber<T>
         }
     }
 
-    // 木の直径.
+    // 木の直径を求める.
+    // O(V+E)
     public T TreeDiameter()
     {
         if (_seen is null) throw new Exception("call SetupSearch.");
@@ -158,7 +172,8 @@ public sealed class Graph<T> where T : struct, INumber<T>
         return dist.Max();
     }
 
-    // 最大全域木(クラスカル法)
+    // Kruskal法で最大全域木の重みの総和を求める.
+    // O(V+E)
     public T MaxSpanningTreeWeight()
     {
         UnionFind unionFind = new(_vertexCount);
@@ -176,7 +191,8 @@ public sealed class Graph<T> where T : struct, INumber<T>
         return ans;
     }
 
-    // 最小全域木(クラスカル法)
+    // Kruskal法で最小全域木の重みの総和を求める
+    // O(V+E)
     public T MinSpanningTreeWeight()
     {
         UnionFind unionFind = new(_vertexCount);

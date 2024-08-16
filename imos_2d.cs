@@ -21,6 +21,8 @@ public sealed class Imos2D<T> where T : struct, INumber<T>
         _height = h;
     }
 
+    // (startX, startY)を左上, (startX - 1, startY - 1)を右下とする範囲にvalueを加算する.
+    // O(1)
     public void AddQuery(int startX, int startY, int endX, int endY, T value)
     {
         _data[startY, startX] += value;
@@ -38,11 +40,15 @@ public sealed class Imos2D<T> where T : struct, INumber<T>
         }
     }
 
+    // (startX, startY)を左上として幅w, 高さhの長方形の範囲にvalueを加算する.
+    // O(1)
     public void AddQueryLen(int x, int y, int w, int h, T value)
     {
         this.AddQuery(x, y, x + w, y + h, value);
     }
 
+    // 累積和を取って和を計算する.
+    // O(HW)
     public void Simulate()
     {
         for (int x = 1; x < _width; x++)
@@ -62,6 +68,7 @@ public sealed class Imos2D<T> where T : struct, INumber<T>
         }
     }
 
+    // 中身の配列を取得する.
     public T[,] GetData()
     {
         return _data;
