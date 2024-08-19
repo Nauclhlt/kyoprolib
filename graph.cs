@@ -33,6 +33,8 @@ public sealed class Graph<T> where T : struct, INumber<T>
     {
         if (!Validate(a) || !Validate(b)) return;
 
+        if (a > b) (a, b) = (b, a);
+
         _graph[a].Add(new Edge<T>(a, b, weight));
         _graph[b].Add(new Edge<T>(b, a, weight));
         _edges.Add(new Edge<T>(a, b, weight));
@@ -140,6 +142,72 @@ public sealed class Graph<T> where T : struct, INumber<T>
                 queue.Enqueue((children[i].To, w + children[i].Weight));
             }
         }
+    }
+
+    // 補グラフを作成する.
+    // O(V^2)
+    public Graph<T> CreateComplement()
+    {
+        HashSet<(int, int)> edgeSet = new();
+        for (int i = 0; i < _edges.Count; i++)
+        {
+            edgeSet.Add((_edges[i].From, _edges[i].To));
+        }
+
+        Graph<T> g = new(_vertexCount);
+
+        for (int i = 0; i < _vertexCount - 1; i++)
+        {
+            for (int j = i + 1; j < _vertexCount; j++)
+            {
+                if (!edgeSet.Contains((i, j)))
+                {
+                    g.AddEdge(i, j, default);
+                }
+            }
+        }
+
+        return g;
+    }
+
+    // 二部グラフか判定する.
+    // O(V+E)
+    public bool IsBipartite()
+    {
+        if (_seen is null) throw new Exception("Call SetupSearch.");
+
+        Array.Clear(_seen);
+
+        Stack<(int, bool)> stack = new();
+
+        bool[] memo = new bool[_vertexCount];
+
+        for (int i = 0; i < _vertexCount; i++)
+        {
+            stack.Push((i, false));
+
+            while (stack.Count > 0)
+            {
+                (int n, bool c) = stack.Pop();
+
+                if (_seen[n])
+                {
+                    if (memo[n] != !c) return false;
+                    continue;
+                }
+
+                _seen[n] = true;
+                memo[n] = !c;
+
+                var ch = _graph[n];
+                for (int j = 0; j < ch.Count; j++)
+                {
+                    stack.Push((ch[j].To, !c));
+                }
+            }
+        }
+
+        return true;
     }
 
     // 木の直径を求める.
