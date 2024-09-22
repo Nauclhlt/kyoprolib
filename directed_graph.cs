@@ -1,7 +1,7 @@
 // 重み付き(重みなし)の有向グラフを管理する.
 // Depends on: Edge<T>
 // @author Nauclhlt.
-public sealed class DirectedGraph<T> where T : struct, INumber<T>
+public sealed class DirectedGraph<T> where T : struct, INumber<T>, IMinMaxValue<T>
 {
     private List<List<Edge<T>>> _graph;
     private List<Edge<T>> _edges;
@@ -135,6 +135,55 @@ public sealed class DirectedGraph<T> where T : struct, INumber<T>
                 }
             }
         }
+    }
+
+    // Warshall-Floyd法を用いて各2頂点間の最短経路の重みの総和を求める.
+    // O(V^3)
+    public T[,] WarshallFloyd()
+    {
+        if (_vertexCount > 800)
+        {
+            throw new InvalidOperationException("Too large graph.");
+        }
+
+        T[,] map = new T[_vertexCount, _vertexCount];
+
+        for (int i = 0; i < _vertexCount; i++)
+        {
+            for (int j = 0; j < _vertexCount; j++)
+            {
+                map[i, j] = T.MaxValue;
+            }
+        }
+
+        for (int i = 0; i < _vertexCount; i++)
+        {
+            map[i, i] = T.Zero;
+        }
+
+        for (int i = 0; i < _edges.Count; i++)
+        {
+            map[_edges[i].From, _edges[i].To] = T.Min(_edges[i].Weight, map[_edges[i].From, _edges[i].To]);
+        }
+
+        for (int k = 0; k < _vertexCount; k++)
+        {
+            for (int j = 0; j < _vertexCount; j++)
+            {
+                for (int i = 0; i < _vertexCount; i++)
+                {
+                    if (map[i, k] != T.MaxValue && map[k, j] != T.MaxValue)
+                    {
+                        if (map[i, k] + map[k, j] < map[i, j])
+                        {
+                            map[i, j] = map[i, k] + map[k, j];
+                        }
+                    }
+                }
+            }
+        }
+
+        return map;
     }
 
     // トポロジカルソートをする.

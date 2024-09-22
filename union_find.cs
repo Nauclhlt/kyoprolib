@@ -3,17 +3,20 @@
 public sealed class UnionFind
 {
     private int[] _parents;
-    private int _size;
+    private int[] _size;
+    private int _vertexCount;
 
-    public int Size => _size;
+    public int VertexCount => _vertexCount;
 
     public UnionFind(int n)
     {
-        _size = n;
+        _vertexCount = n;
         _parents = new int[n];
+        _size = new int[n];
         for (int i = 0; i < n; i++)
         {
             _parents[i] = i;
+            _size[i] = 1;
         }
     }
 
@@ -32,7 +35,17 @@ public sealed class UnionFind
         int rootY = Root(y);
         if (rootX == rootY)
             return;
-        _parents[rootX] = rootY;
+            
+        int from = rootX;
+        int to = rootY;
+        // merge from to to
+        if (_size[from] > _size[to])
+        {
+            (from, to) = (to, from);
+        }
+
+        _size[to] += _size[from];
+        _parents[from] = to;
     }
 
     // xと同じ連結成分に含まれる頂点のリストを返す.
@@ -41,7 +54,7 @@ public sealed class UnionFind
     {
         int rootX = Root(x);
         List<int> set = new List<int>();
-        for (int i = 0; i < _size; i++)
+        for (int i = 0; i < _vertexCount; i++)
         {
             if (Root(i) == rootX)
                 set.Add(i);
@@ -55,7 +68,7 @@ public sealed class UnionFind
     public Dictionary<int, List<int>> FindAll()
     {
         Dictionary<int, List<int>> sets = new Dictionary<int, List<int>>();
-        for (int i = 0; i < _size; i++)
+        for (int i = 0; i < _vertexCount; i++)
         {
             int root = Root(i);
             if (sets.ContainsKey(root))
@@ -80,7 +93,7 @@ public sealed class UnionFind
     // O(N)
     public void Clear()
     {
-        for (int i = 0; i < _size; i++)
+        for (int i = 0; i < _vertexCount; i++)
         {
             _parents[i] = i;
         }
