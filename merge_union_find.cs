@@ -1,22 +1,33 @@
-// 素集合データ構造(Disjoint Set Union)を管理する.
+// データを乗せた素集合データ構造(Disjoint Set Union)を管理する.
 // @author Nauclhlt.
-public sealed class UnionFind
+public sealed class MergeUnionFind<T>
 {
     private int[] _parents;
-    private int[] _size;
+    private T[] _data;
     private int _vertexCount;
+
+    private Func<int, T> _init;
+    private Func<T, T, T> _merge;
+    private Func<T, T, bool> _dir;
 
     public int VertexCount => _vertexCount;
 
-    public UnionFind(int n)
+    // init(i) => 頂点iの初期値を返す
+    // merge(a, b) => aをbにマージした結果を返す
+    // dir(a, b) => a → bにマージするならtrue, b → aにマージするならfalseを返す
+    public MergeUnionFind(int n, Func<int, T> init, Func<T, T, T> merge, Func<T, T, bool> dir)
     {
+        _init = init;
+        _merge = merge;
+        _dir = dir;
+
         _vertexCount = n;
         _parents = new int[n];
-        _size = new int[n];
+        _data = new T[n];
         for (int i = 0; i < n; i++)
         {
+            _data[i] = _init(i);
             _parents[i] = i;
-            _size[i] = 1;
         }
     }
 
@@ -28,10 +39,10 @@ public sealed class UnionFind
         return _parents[x] = Root(_parents[x]);
     }
 
-    // xが属する連結成分のサイズを返す.
-    public int Size(int x)
+    // xが属する連結成分の値を返す
+    public T Value(int x)
     {
-        return _size[Root(x)];
+        return _data[x];
     }
 
     // xの属する木とyの属する木を併合する.
@@ -44,13 +55,13 @@ public sealed class UnionFind
             
         int from = rootX;
         int to = rootY;
-        // merge from to to
-        if (_size[from] > _size[to])
+
+        if (!_dir(_data[from], _data[to]))
         {
             (from, to) = (to, from);
         }
 
-        _size[to] += _size[from];
+        _data[to] = _merge(_data[from], _data[to]);
         _parents[from] = to;
     }
 
