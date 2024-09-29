@@ -1,5 +1,5 @@
 // 平衡二分探索木を利用してソートされた集合を管理する.
-public sealed class Set<T> where T : IComparisonOperators<T, T, bool>, IEqualityOperators<T, T, bool>
+public sealed class Set<T> where T : IComparable<T>
 {
     private AVLTree<T> _tree;
 
@@ -61,7 +61,7 @@ public sealed class Set<T> where T : IComparisonOperators<T, T, bool>, IEquality
 
 // AVL木, 平衡二分探索木.
 // 参考: https://zenn.dev/student_blog/articles/670eee14e04d46
-public sealed class AVLTree<T> where T : IComparisonOperators<T, T, bool>, IEqualityOperators<T, T, bool>
+public sealed class AVLTree<T> where T : IComparable<T>
 {
     private sealed class Node
     {
@@ -154,7 +154,7 @@ public sealed class AVLTree<T> where T : IComparisonOperators<T, T, bool>, IEqua
             return current;
         }
 
-        if (current.Value == value)
+        if (current.Value.CompareTo(value) == 0)
         {
             // 消す
             if (current.Has2Children)
@@ -198,7 +198,7 @@ public sealed class AVLTree<T> where T : IComparisonOperators<T, T, bool>, IEqua
             }
         }
 
-        if (value < current.Value)
+        if (value.CompareTo(current.Value) == -1)
         {
             current.Left = RemoveRecursive(current.Left, value);
 
@@ -236,7 +236,7 @@ public sealed class AVLTree<T> where T : IComparisonOperators<T, T, bool>, IEqua
             return current;
         }
 
-        if (value < current.Value)
+        if (value.CompareTo(current.Value) == -1)
         {
             current.Left = AddRecursive(current.Left, value);
 
@@ -329,7 +329,7 @@ public sealed class AVLTree<T> where T : IComparisonOperators<T, T, bool>, IEqua
             return;
         }
 
-        if (target.Value < root.Value)
+        if (target.Value.CompareTo(root.Value) == -1)
         {
             DeleteLeftNode(root.Left, target);
             Update(root);
@@ -437,9 +437,9 @@ public sealed class AVLTree<T> where T : IComparisonOperators<T, T, bool>, IEqua
 
         while (current is not null)
         {
-            if (current.Value == value) return true;
+            if (current.Value.CompareTo(value) == 0) return true;
 
-            if (value < current.Value) current = current.Left;
+            if (value.CompareTo(current.Value) == -1) current = current.Left;
             else current = current.Right;
         }
 
@@ -487,20 +487,49 @@ public sealed class AVLTree<T> where T : IComparisonOperators<T, T, bool>, IEqua
         }
     }
 
+    // public int LowerBound(T value)
+    // {
+    //     if (_rootNode is null) return 0;
+
+    //     if (value > Max()) return _rootNode.Size;
+
+    //     int res = LowerBoundRecursive(_rootNode, value, _rootNode.LeftSize());
+
+    //     return res;
+    // }
+
     public int LowerBound(T value)
     {
-        if (_rootNode is null) return 0;
+        Node root = _rootNode;
 
-        if (value > Max()) return _rootNode.Size;
+        var torg = root;
+        if (root is null) return -1;
 
-        int res = LowerBoundRecursive(_rootNode, value, _rootNode.LeftSize());
+        var idx = root.Size - root.RightSize() - 1;
+        var ret = Int32.MaxValue;
+        while (root is not null)
+        {
+            if (root.Value.CompareTo(value) >= 0)
+            {
+                if (root.Value.CompareTo(value) == 0) ret = int.Min(ret, idx);
+                root = root.Left;
+                if (root == null) ret = Math.Min(ret, idx);
+                idx -= root is null ? 0 : (root.RightSize() + 1);
+            }
+            else
+            {
+                root = root.Right;
+                idx += (root is null ? 1 : root.LeftSize() + 1);
+                if (root == null) return idx;
+            }
+        }
 
-        return res;
+        return ret == Int32.MaxValue ? torg.Size : ret;
     }
 
     private int LowerBoundRecursive(Node current, T value, int idx)
     {
-        if (current.Value < value)
+        if (current.Value.CompareTo(value) == -1)
         {
             // 右
             if (current.Right is null) return idx;
@@ -513,7 +542,7 @@ public sealed class AVLTree<T> where T : IComparisonOperators<T, T, bool>, IEqua
         {
             // 左
             if (current.Left is null) return idx;
-            else if (current.Left.Value < value) return idx;
+            else if (current.Left.Value.CompareTo(value) == -1) return idx;
             else
             {
                 return LowerBoundRecursive(current.Left, value, idx - current.Left.RightSize() - 1);
