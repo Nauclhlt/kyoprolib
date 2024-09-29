@@ -34,6 +34,13 @@ public sealed class Set<T> where T : IComparable<T>
         return _tree.Contains(item);
     }
 
+    // itemのインデックスを返す.
+    // O(logN)
+    public int IndexOf(T item)
+    {
+        return _tree.IndexOf(item);
+    }
+
     // 値がvalue以上となる最初のインデックスを返す.
     public int LowerBound(T value)
     {
@@ -44,6 +51,11 @@ public sealed class Set<T> where T : IComparable<T>
     public T GetByIndex(int index)
     {
         return _tree.GetByIndex(index);
+    }
+
+    public void RemoveAtIndex(int index)
+    {
+        _tree.RemoveAtIndex(index);
     }
 
     // 昇順ソートされたリストを返す.
@@ -470,6 +482,12 @@ public sealed class AVLTree<T> where T : IComparable<T>
         return GetByIndexRecursive(_rootNode, index);
     }
 
+    public void RemoveAtIndex(int index)
+    {
+        T target = GetByIndex(index);
+        Remove(target);
+    }
+
     private T GetByIndexRecursive(Node current, int offset)
     {
         int left = current.LeftSize();
@@ -487,16 +505,36 @@ public sealed class AVLTree<T> where T : IComparable<T>
         }
     }
 
-    // public int LowerBound(T value)
-    // {
-    //     if (_rootNode is null) return 0;
+    public int IndexOf(T value)
+    {
+        int index = _rootNode.LeftSize();
+        Node current = _rootNode;
 
-    //     if (value > Max()) return _rootNode.Size;
-
-    //     int res = LowerBoundRecursive(_rootNode, value, _rootNode.LeftSize());
-
-    //     return res;
-    // }
+        while (true)
+        {
+            // left
+            int c = value.CompareTo(current.Value);
+            if (c == -1)
+            {
+                if (current.Left is null) return -1;
+                else
+                {
+                    current = current.Left;
+                    index -= current.RightSize() + 1;
+                }
+            }
+            else if (c == 0) return index;
+            else
+            {
+                if (current.Right is null) return -1;
+                else
+                {
+                    current = current.Right;
+                    index += current.LeftSize() + 1;
+                }
+            }
+        }
+    }
 
     public int LowerBound(T value)
     {
@@ -525,29 +563,6 @@ public sealed class AVLTree<T> where T : IComparable<T>
         }
 
         return ret == Int32.MaxValue ? torg.Size : ret;
-    }
-
-    private int LowerBoundRecursive(Node current, T value, int idx)
-    {
-        if (current.Value.CompareTo(value) == -1)
-        {
-            // 右
-            if (current.Right is null) return idx;
-            else
-            {
-                return LowerBoundRecursive(current.Right, value, idx + current.Right.LeftSize() + 1);
-            }
-        }
-        else
-        {
-            // 左
-            if (current.Left is null) return idx;
-            else if (current.Left.Value.CompareTo(value) == -1) return idx;
-            else
-            {
-                return LowerBoundRecursive(current.Left, value, idx - current.Left.RightSize() - 1);
-            }
-        }
     }
 
     public List<T> OrderAscending()
