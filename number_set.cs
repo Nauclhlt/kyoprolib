@@ -47,6 +47,23 @@ public sealed class NumberSet<T> : IEnumerable<T> where T : struct, INumber<T>
         }
     }
 
+    // itemをcount個削除する.
+    // O(logN)
+    public bool RemoveMany(T item, int count)
+    {
+        if (!_countMap.ContainsKey(item)) return false;
+
+        _count -= int.Min(_countMap[item], count);
+        _countMap[item] -= count;
+        if (_countMap[item] <= 0)
+        {
+            _countMap.Remove(item);
+            _set.Remove(item);
+        }
+
+        return true;
+    }
+
     // itemを削除する.
     // O(logN)
     public bool Remove(T item)

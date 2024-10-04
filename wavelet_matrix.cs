@@ -11,7 +11,34 @@ public sealed class WaveletMatrix
 
     public int Length => _length;
 
+    public WaveletMatrix(int[] array)
+    {
+        ulong[] data = new ulong[array.Length];
+        for (int i = 0; i < array.Length; i++)
+        {
+            data[i] = (ulong)array[i];
+        }
+
+        Construct(data);
+    }
+
+    public WaveletMatrix(long[] array)
+    {
+        ulong[] data = new ulong[array.Length];
+        for (int i = 0; i < array.Length; i++)
+        {
+            data[i] = (ulong)array[i];
+        }
+
+        Construct(data);
+    }
+
     public WaveletMatrix(ulong[] array)
+    {
+        Construct(array);
+    }
+
+    private void Construct(ulong[] array)
     {
         _length = array.Length;
         _maxValue = array.Max() + 1;

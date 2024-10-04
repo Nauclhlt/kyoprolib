@@ -181,6 +181,7 @@ public sealed class AVLTree<T> where T : IComparable<T>
                 Update(current.Right);
 
                 Update(current);
+                current = Balance(current);
 
                 return current;
             }
@@ -192,6 +193,8 @@ public sealed class AVLTree<T> where T : IComparable<T>
                 Update(current.Right);
                 Update(current);
 
+                current = Balance(current);
+
                 return current;
             }
             else if (current.HasOnlyRight)
@@ -201,6 +204,8 @@ public sealed class AVLTree<T> where T : IComparable<T>
                 Update(current.Left);
                 Update(current.Right);
                 Update(current);
+
+                current = Balance(current);
 
                 return current;
             }
