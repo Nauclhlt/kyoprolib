@@ -69,6 +69,11 @@ public sealed class Set<T> where T : IComparable<T>
     {
         return _tree.OrderDescending();
     }
+
+    public void DebugPrintTree()
+    {
+        _tree.PrintTree();
+    }
 }
 
 // AVL木, 平衡二分探索木.
@@ -87,6 +92,7 @@ public sealed class AVLTree<T> where T : IComparable<T>
         public bool Has2Children => _left is not null && _right is not null;
         public bool HasOnlyLeft => _left is not null && _right is null;
         public bool HasOnlyRight => _left is null && _right is not null;
+        public bool HasNoChild => _left is null && _right is null;
 
         public Node(T value)
         {
@@ -174,7 +180,15 @@ public sealed class AVLTree<T> where T : IComparable<T>
                 Node max = GetMaxNode(current.Left);
                 T val = max.Value;
                 
-                DeleteLeftNode(current, max);
+                if (current.Left == max)
+                {
+                    current.Left = current.Left.Left;
+                }
+                else
+                {
+                    DeleteRightNode(current.Left, max);
+                }
+                
                 current.Value = val;
 
                 Update(current.Left);
@@ -325,37 +339,17 @@ public sealed class AVLTree<T> where T : IComparable<T>
         }
     }
 
-    private void DeleteLeftNode(Node root, Node target)
+    private void DeleteRightNode(Node root, Node target)
     {
         if (root is null) return;
 
-        if (root.Left == target)
-        {
-            root.Left = root.Left.Left;
-            Update(root.Left);
-            Update(root);
-            return;
-        }
-        
-        if (root.Right == target)
-        {
-            root.Right = root.Right.Right;
+        Node current = root;
+        while (current.Right != target) current = current.Right;
 
-            Update(root.Right);
-            Update(root);
-            return;
-        }
+        current.Right = null;
 
-        if (target.Value.CompareTo(root.Value) == -1)
-        {
-            DeleteLeftNode(root.Left, target);
-            Update(root);
-        }
-        else
-        {
-            DeleteLeftNode(root.Right, target);
-            Update(root);
-        }
+        Update(current.Right);
+        Update(current);
     }
 
     private Node GetMaxNode(Node node)
