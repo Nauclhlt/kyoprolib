@@ -47,15 +47,20 @@ public sealed class Set<T> where T : IComparable<T>
         return _tree.LowerBound(value);
     }
 
+    public T LowerBouldValue(T value, T fallback)
+    {
+        return _tree.LowerBoundValue(value, fallback);
+    }
+
     // インデックスで値を取得する.
     public T GetByIndex(int index)
     {
         return _tree.GetByIndex(index);
     }
 
-    public void RemoveAtIndex(int index)
+    public void RemoveByIndex(int index)
     {
-        _tree.RemoveAtIndex(index);
+        _tree.RemoveByIndex(index);
     }
 
     // 昇順ソートされたリストを返す.
@@ -169,64 +174,13 @@ public sealed class AVLTree<T> where T : IComparable<T>
     {
         if (current is null)
         {
-            return current;
+            return null;
         }
 
         if (current.Value.CompareTo(value) == 0)
         {
             // 消す
-            if (current.Has2Children)
-            {
-                Node max = GetMaxNode(current.Left);
-                T val = max.Value;
-                
-                if (current.Left == max)
-                {
-                    current.Left = current.Left.Left;
-                }
-                else
-                {
-                    DeleteRightNode(current.Left, max);
-                }
-                
-                current.Value = val;
-
-                Update(current.Left);
-                Update(current.Right);
-
-                Update(current);
-                current = Balance(current);
-
-                return current;
-            }
-            else if (current.HasOnlyLeft)
-            {
-                current = current.Left;
-
-                Update(current.Left);
-                Update(current.Right);
-                Update(current);
-
-                current = Balance(current);
-
-                return current;
-            }
-            else if (current.HasOnlyRight)
-            {
-                current = current.Right;
-
-                Update(current.Left);
-                Update(current.Right);
-                Update(current);
-
-                current = Balance(current);
-
-                return current;
-            }
-            else
-            {
-                return null;
-            }
+            return InternalRemoveNode(current);
         }
 
         if (value.CompareTo(current.Value) == -1)
@@ -253,6 +207,68 @@ public sealed class AVLTree<T> where T : IComparable<T>
             Update(current);
 
             return current;
+        }
+    }
+
+    private Node InternalRemoveNode(Node target)
+    {
+        if (target.Has2Children)
+        {
+            Node max = GetMaxNode(target.Left);
+            T val = max.Value;
+            
+            if (target.Left == max)
+            {
+                target.Left = target.Left.Left;
+            }
+            else
+            {
+                target.Left = DeleteRightNode(target.Left, max);
+            }
+            
+            target.Value = val;
+
+            Update(target.Left);
+            Update(target.Right);
+
+            Update(target);
+            target = Balance(target);
+
+            Update(target);
+
+            return target;
+        }
+        else if (target.HasOnlyLeft)
+        {
+            target = target.Left;
+
+            Update(target.Left);
+            Update(target.Right);
+            Update(target);
+
+            target = Balance(target);
+
+            Update(target);
+
+            return target;
+        }
+        else if (target.HasOnlyRight)
+        {
+            target = target.Right;
+
+            Update(target.Left);
+            Update(target.Right);
+            Update(target);
+
+            target = Balance(target);
+
+            Update(target);
+
+            return target;
+        }
+        else
+        {
+            return null;
         }
     }
 
@@ -339,17 +355,42 @@ public sealed class AVLTree<T> where T : IComparable<T>
         }
     }
 
-    private void DeleteRightNode(Node root, Node target)
+    private Node DeleteRightNode(Node root, Node target)
     {
-        if (root is null) return;
+        if (root is null) return null;
 
-        Node current = root;
-        while (current.Right != target) current = current.Right;
+        if (root.Right == target)
+        {
+            root.Right = root.Right.Left;
+            Update(root.Right);
+            Update(root);
 
-        current.Right = null;
+            root = Balance(root);
 
-        Update(current.Right);
-        Update(current);
+            Update(root);
+
+            return root;
+        }
+        else
+        {
+            int sz = root.Size;
+            root.Right = DeleteRightNode(root.Right, target);
+            
+
+            Update(root.Right);
+            Update(root.Left);
+            Update(root);
+            root = Balance(root);
+
+            if (sz - root.Size == 2)
+            {
+                Console.WriteLine("ERR");
+            }
+
+            Update(root);
+
+            return root;
+        }
     }
 
     private Node GetMaxNode(Node node)
@@ -473,7 +514,7 @@ public sealed class AVLTree<T> where T : IComparable<T>
         {
             throw new IndexOutOfRangeException();
         }
-        if (index < 0 || index >= _rootNode.Size)
+        if (index < 0 || index >= Count)
         {
             throw new IndexOutOfRangeException();
         }
@@ -481,14 +522,64 @@ public sealed class AVLTree<T> where T : IComparable<T>
         return GetByIndexRecursive(_rootNode, index);
     }
 
-    public void RemoveAtIndex(int index)
+    public void RemoveByIndex(int index)
     {
-        T target = GetByIndex(index);
-        Remove(target);
+        if (_rootNode is null) return;
+        if (index < 0 || index >= Count)
+        {
+            throw new IndexOutOfRangeException();
+        }
+
+        _rootNode = RemoveByIndexRecursive(_rootNode, index);
+    }
+
+    private Node RemoveByIndexRecursive(Node current, int offset)
+    {
+        if (current is null)
+        {
+            Console.WriteLine($"! current was null. offset={offset}  count={Count}");
+            return default;
+        }
+        
+        int left = current.LeftSize();
+
+        if (left == offset)
+        {
+            return InternalRemoveNode(current);
+        }
+        if (offset < left)
+        {
+            current.Left = RemoveByIndexRecursive(current.Left, offset);
+
+            Update(current);
+
+            current = Balance(current);
+
+            Update(current);
+
+            return current;
+        }
+        else
+        {
+            current.Right = RemoveByIndexRecursive(current.Right, offset - left - 1);
+
+            Update(current);
+
+            current = Balance(current);
+
+            Update(current);
+
+            return current;
+        }
     }
 
     private T GetByIndexRecursive(Node current, int offset)
     {
+        if (current is null)
+        {
+            Console.WriteLine($"! current was null. offset={offset}  count={Count}");
+            return default;
+        }
         int left = current.LeftSize();
         if (left == offset)
         {
@@ -535,33 +626,90 @@ public sealed class AVLTree<T> where T : IComparable<T>
         }
     }
 
-    public int LowerBound(T value)
+    public T LowerBoundValue(T value, T fallback)
     {
-        Node root = _rootNode;
+        if (_rootNode is null) return fallback;
 
-        var torg = root;
-        if (root is null) return -1;
+        int res = _rootNode.Size;
+        Node current = _rootNode;
+        T lowerbound = default;
+        int index = _rootNode.LeftSize();
 
-        var idx = root.Size - root.RightSize() - 1;
-        var ret = Int32.MaxValue;
-        while (root is not null)
+        while (true)
         {
-            if (root.Value.CompareTo(value) >= 0)
+            int cmp = value.CompareTo(current.Value);
+            if (cmp <= 0)
             {
-                if (root.Value.CompareTo(value) == 0) ret = int.Min(ret, idx);
-                root = root.Left;
-                if (root == null) ret = Math.Min(ret, idx);
-                idx -= root is null ? 0 : (root.RightSize() + 1);
+                res = int.Min(res, index);
+                lowerbound = current.Value;
+                if (current.Left is null) break;
+                index -= current.Left.RightSize() + 1;
+                current = current.Left;
             }
             else
             {
-                root = root.Right;
-                idx += (root is null ? 1 : root.LeftSize() + 1);
-                if (root == null) return idx;
+                if (current.Right is null) break;
+                index += current.Right.LeftSize() + 1;
+                current = current.Right;
             }
         }
 
-        return ret == Int32.MaxValue ? torg.Size : ret;
+        return res < Count ? lowerbound : fallback;
+    }
+
+    public int LowerBound(T value)
+    {
+        if (_rootNode is null) return 0;
+
+        int res = _rootNode.Size;
+        Node current = _rootNode;
+        int index = _rootNode.LeftSize();
+
+        while (true)
+        {
+            int cmp = value.CompareTo(current.Value);
+            if (cmp <= 0)
+            {
+                res = int.Min(res, index);
+                if (current.Left is null) break;
+                index -= current.Left.RightSize() + 1;
+                current = current.Left;
+            }
+            else
+            {
+                if (current.Right is null) break;
+                index += current.Right.LeftSize() + 1;
+                current = current.Right;
+            }
+        }
+
+        return res;
+
+        // Node root = _rootNode;
+
+        // var torg = root;
+        // if (root is null) return -1;
+
+        // var idx = root.Size - root.RightSize() - 1;
+        // var ret = Int32.MaxValue;
+        // while (root is not null)
+        // {
+        //     if (root.Value.CompareTo(value) >= 0)
+        //     {
+        //         if (root.Value.CompareTo(value) == 0) ret = int.Min(ret, idx);
+        //         root = root.Left;
+        //         if (root == null) ret = Math.Min(ret, idx);
+        //         idx -= root is null ? 0 : (root.RightSize() + 1);
+        //     }
+        //     else
+        //     {
+        //         root = root.Right;
+        //         idx += (root is null ? 1 : root.LeftSize() + 1);
+        //         if (root == null) return idx;
+        //     }
+        // }
+
+        // return ret == Int32.MaxValue ? torg.Size : ret;
     }
 
     public List<T> OrderAscending()
