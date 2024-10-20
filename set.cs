@@ -47,7 +47,7 @@ public sealed class Set<T> where T : IComparable<T>
         return _tree.LowerBound(value);
     }
 
-    public T LowerBouldValue(T value, T fallback)
+    public T LowerBoundValue(T value, T fallback)
     {
         return _tree.LowerBoundValue(value, fallback);
     }
