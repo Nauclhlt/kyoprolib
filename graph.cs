@@ -61,7 +61,7 @@ public sealed class Graph<T> where T : struct, INumber<T>, IMinMaxValue<T>
     // ほぼ定数時間
     public bool Same(int a, int b)
     {
-        if (_uf is null) throw new Exception("Call SetupSearch.");
+        if (_uf is null) throw new Exception("Call SetupDSU.");
 
         return _uf.Same(a, b);
     }
@@ -70,7 +70,7 @@ public sealed class Graph<T> where T : struct, INumber<T>, IMinMaxValue<T>
     // O(V)
     public Dictionary<int, List<int>> GetConnectedComponents()
     {
-        if (_uf is null) throw new Exception("Call SetupSearch.");
+        if (_uf is null) throw new Exception("Call SetupDSU.");
         return _uf.FindAll();
     }
 
@@ -159,6 +159,43 @@ public sealed class Graph<T> where T : struct, INumber<T>, IMinMaxValue<T>
         }
 
         return map;
+    }
+
+    public DfsTimeLabel DfsLabelFrom(int from)
+    {
+        if (!Validate(from)) return null;
+        if (_seen is null) throw new Exception("call SetupSearch.");
+
+        Array.Clear(_seen);
+
+        int timestamp = 0;
+
+        int[] inLabel = new int[_vertexCount];
+        int[] outLabel = new int[_vertexCount];
+
+        void dfs(int n, int prev)
+        {
+            inLabel[n] = timestamp;
+            timestamp++;
+
+            _seen[n] = true;
+
+            var ch = _graph[n];
+            
+            for (int i = 0; i < ch.Count; i++)
+            {
+                if (ch[i].To == prev || _seen[ch[i].To]) continue;
+
+                dfs(ch[i].To, n);
+            }
+
+            outLabel[n] = timestamp;
+            timestamp++;
+        }
+
+        dfs(from, -1);
+
+        return new DfsTimeLabel(inLabel, outLabel);
     }
 
     // 頂点nからBFSをしてそれぞれの頂点にはじめに訪問したときのパスの重みの合計を配列に格納する.
@@ -332,5 +369,27 @@ public sealed class Graph<T> where T : struct, INumber<T>, IMinMaxValue<T>
     bool Validate(int n)
     {
         return 0 <= n && n < _vertexCount;
+    }
+}
+
+public sealed class DfsTimeLabel
+{
+    private int[] _in;
+    private int[] _out;
+
+    public DfsTimeLabel(int[] @in, int[] @out)
+    {
+        _in = @in;
+        _out = @out;
+    }
+
+    public int GetInTime(int n)
+    {
+        return _in[n];
+    }
+
+    public int GetOutTime(int n)
+    {
+        return _out[n];
     }
 }
