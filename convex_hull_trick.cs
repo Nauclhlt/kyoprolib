@@ -76,7 +76,7 @@ public sealed class ConvexHullTrick<T> where T : INumber<T>
         while (idx != _lineSet.Count - 1 && IsUseless(idx + 1, _lineSet.GetByIndex(idx + 1))) _lineSet.RemoveAtIndex(idx + 1);
         while (idx != 0 && IsUseless(idx - 1, _lineSet.GetByIndex(idx - 1)))
         {
-            _lineSet.RemoveAtIndex(idx - 1);
+            _lineSet.RemoveByIndex(idx - 1);
             idx--;
         }
     }

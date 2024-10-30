@@ -1,3 +1,5 @@
+// 円環を管理する.
+// @author Nauclhlt.
 public readonly struct Ring
 {
     private readonly int _size;
@@ -44,6 +46,7 @@ public readonly struct Ring
     }
 }
 
+// 円環上での座標を管理する.
 public struct RingPoint
 {
     private int _point;
