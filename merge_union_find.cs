@@ -42,7 +42,7 @@ public sealed class MergeUnionFind<T>
     // xが属する連結成分の値を返す
     public T Value(int x)
     {
-        return _data[x];
+        return _data[Root(x)];
     }
 
     // xの属する木とyの属する木を併合する.
