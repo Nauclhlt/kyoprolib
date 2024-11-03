@@ -74,7 +74,7 @@ public sealed class PersistentLazySegmentTree<T, M> where T : struct, IEquatable
 
     private Node BuildClearRange(int l, int r, T value)
     {
-        if (l + 1 >= r) return new Node(value);
+        if (l + 1 >= r) return new Node(value, null);
         else return MergeNode(BuildClearRange(l, (l + r) / 2, value), BuildClearRange((l + r) / 2, r, value));
     }
 
@@ -152,18 +152,17 @@ public sealed class PersistentLazySegmentTree<T, M> where T : struct, IEquatable
 
     private Node ApplyRec(int left, int right, M value, Node node, int l, int r)
     {
-        Evaluate(node, l, r);
-
         if (left <= l && r <= right)
         {
             Node n = new (node.Data, GuardComposition(node.Lazy, value));
             n.LeftNode = node.LeftNode;
             n.RightNode = node.RightNode;
-            Evaluate(n, l, r);
+
             return n;
         }
         else if (left < r && l < right)
         {
+            Evaluate(node, l, r);
             Node n = MergeNode(ApplyRec(left, right, value, node.LeftNode, l, (l + r) / 2), ApplyRec(left, right, value, node.RightNode, (l + r) / 2, r));
             return n;
         }
