@@ -44,7 +44,7 @@ public sealed class SuffixArray
         int lower = 0;
         {
             int left = 0;
-            int right = _length - 1;
+            int right = _length;
             StringComparer comp = StringComparer.Ordinal;
 
             while (right > left)
