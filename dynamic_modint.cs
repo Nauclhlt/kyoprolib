@@ -1,4 +1,4 @@
-// 実行時に底を設定可能なmodint. 乗法の逆元が存在する必要がある.
+// 実行時に法を設定可能なmodint. 乗法の逆元が存在する必要がある.
 // @author Nauclhlt.
 public readonly struct DynamicModInt
 {

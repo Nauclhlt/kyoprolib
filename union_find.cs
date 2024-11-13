@@ -102,6 +102,7 @@ public sealed class UnionFind
         for (int i = 0; i < _vertexCount; i++)
         {
             _parents[i] = i;
+            _size[i] = i;
         }
     }
 }
