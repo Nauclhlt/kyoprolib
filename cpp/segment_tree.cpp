@@ -45,7 +45,7 @@ public:
     {
         if (_originalDataSize != (int)array.size())
         {
-            throw invalid_argument();
+            throw exception();
         }
 
         for (int i = 0; i < (int)array.size(); i++)

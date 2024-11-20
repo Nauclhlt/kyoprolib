@@ -32,7 +32,7 @@ public:
     {
         if (_originalDataSize != (int)array.size())
         {
-            throw invalid_argument();
+            throw exception();
         }
 
         for (int i = 0; i < (int)array.size(); i++)
@@ -70,7 +70,7 @@ public:
     {
         if (index < 0 || index >= _originalDataSize)
         {
-            throw invalid_argument("index");
+            throw exception("index");
         }
 
         return AccessRec(index, 0, 0, _dataSize);
