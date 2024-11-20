@@ -1,4 +1,4 @@
-template <typename T, typename M, T OP(T, T), T MAPPING(T, M, int), T COMPOSITION(T, T), T IDENTITY>
+template <typename T, typename M, T OP(T, T), T MAPPING(T, M, int), T COMPOSITION(T, T)>
 class LazySegmentTree
 {
 private:
@@ -7,11 +7,13 @@ private:
     int _originalDataSize;
     vector<T> _data;
     vector<optional<T>> _lazy;
+    T _identity;
 
 public:
-    LazySegmentTree(int n)
+    LazySegmentTree(int n, T identity)
     {
         _originalDataSize = n;
+        _identity = identity;
 
         int size = 1;
         while (n > size)
@@ -22,7 +24,7 @@ public:
         _dataSize = size;
         _treeSize = 2 * size - 1;
 
-        _data.resize(_treeSize, IDENTITY);
+        _data.resize(_treeSize, _identity);
         _lazy.resize(_treeSize, nullopt);
     }
 
@@ -127,7 +129,7 @@ private:
 
         if (left >= r || right <= l)
         {
-            return IDENTITY;
+            return _identity;
         }
 
         if (left <= l && r <= right)

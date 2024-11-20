@@ -1,4 +1,4 @@
-template<typename T, T OP(T, T), T APPLY(T, T), T IDENTITY>
+template<typename T, T OP(T, T), T APPLY(T, T)>
 class SegmentTree
 {
 private:
@@ -6,11 +6,13 @@ private:
     int _dataSize;
     int _originalDataSize;
     vector<T> _data;
+    T _identity;
 
 public:
-    SegmentTree(int n)
+    SegmentTree(int n, T identity)
     {
         _originalDataSize = n;
+        _identity = identity;
 
         int size = 1;
         while (n > size)
@@ -21,7 +23,7 @@ public:
         _dataSize = size;
         _treeSize = 2 * size - 1;
 
-        _data.resize(_treeSize, IDENTITY);
+        _data.resize(_treeSize, _identity);
     }
 
     int OriginalDataSize()
@@ -36,7 +38,7 @@ public:
 
     T Identity()
     {
-        return IDENTITY;
+        return _identity;
     }
 
     void Build(vector<T>& array)
@@ -89,7 +91,7 @@ private:
     {
         if (left >= r || right <= l)
         {
-            return IDENTITY;
+            return _identity;
         }
 
         if (left <= l && r <= right)
