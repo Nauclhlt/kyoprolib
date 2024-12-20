@@ -79,7 +79,7 @@ public:
 
             _seen[p] = true;
 
-            vector<Edge<T>> ch = _graph[p];
+            vector<Edge<T>>& ch = _graph[p];
             for (int i = 0; i < (int)ch.size(); i++)
             {
                 T w = map[p] + ch[i].Weight;
@@ -160,7 +160,7 @@ public:
             _seen[p] = true;
             map[p] = w;
 
-            vector<Edge<T>> ch = _graph[p];
+            vector<Edge<T>>& ch = _graph[p];
             for (int i = 0; i < (int)ch.size(); i++)
             {
                 queue.emplace(ch[i].To, w + ch[i].Weight);

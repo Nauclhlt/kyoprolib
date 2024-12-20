@@ -110,7 +110,7 @@ public:
 
             _seen[p] = true;
 
-            vector<Edge<T>> ch = _graph[p];
+            vector<Edge<T>>& ch = _graph[p];
             for (int i = 0; i < (int)ch.size(); i++)
             {
                 T w = map[p] + ch[i].Weight;
@@ -192,7 +192,7 @@ public:
             _seen[p] = true;
             map[p] = w;
 
-            vector<Edge<T>> ch = _graph[p];
+            vector<Edge<T>>& ch = _graph[p];
             for (int i = 0; i < (int)ch.size(); i++)
             {
                 queue.emplace(ch[i].To, w + ch[i].Weight);
@@ -264,7 +264,7 @@ public:
                 _seen[n] = true;
                 memo[n] = c;
 
-                vector<Edge<T>> ch = _graph[n];
+                vector<Edge<T>>& ch = _graph[n];
                 for (int j = 0; j < (int)ch.size(); j++)
                 {
                     stack.emplace(ch[j].To, !c);
@@ -324,7 +324,7 @@ public:
             return a.Weight > b.Weight;
         };
 
-        vector<Edge<T>> edges = _edges;
+        vector<Edge<T>>& edges = _edges;
 
         sort(edges.begin(), edges.end(), cmp);
 
@@ -351,7 +351,7 @@ public:
             return a.Weight < b.Weight;
         };
 
-        vector<Edge<T>> edges = _edges;
+        vector<Edge<T>>& edges = _edges;
 
         sort(edges.begin(), edges.end(), cmp);
 
