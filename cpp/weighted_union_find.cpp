@@ -80,7 +80,7 @@ public:
         for (int i = 0; i < _vertexCount; i++)
         {
             int root = Root(i);
-            if (sets.contains(root))
+            if (sets.find(root) != sets.end())
             {
                 sets[root].push_back(i);
             }
