@@ -35,18 +35,36 @@ public sealed class Convolution
         return CalcPow(a, mod - 2, mod);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static long CalcPow(long b, long exp, long mod)
     {
-        if (exp == 0) return 1;
-        if (exp == 1) return b % mod;
+        // if (exp == 0) return 1;
+        // if (exp == 1) return b % mod;
 
-        long m = CalcPow(b, exp / 2L, mod);
-        m *= m;
-		m %= mod;
-        if (exp % 2L == 1) m *= b % mod;
-        m %= mod;
+        // long m = CalcPow(b, exp / 2L, mod);
+        // m *= m;
+		// m %= mod;
+        // if (exp % 2L == 1) m *= b % mod;
+        // m %= mod;
 
-        return m;
+        // return m;
+
+        b %= mod;
+
+        long res = 1L;
+        while (exp > 0)
+        {
+            if ((exp & 1L) == 1L)
+            {
+                res *= b;
+                res %= mod;
+            }
+            b *= b;
+            b %= mod;
+            exp >>= 1;
+        }
+
+        return res;
     }
 
     private long FindPrimitiveRoot(long m)
@@ -149,12 +167,65 @@ public sealed class Convolution
         }
     }
 
+    private void ButterflyNTT(Span<long> target, int exp, long[] root)
+    {
+        if (target.Length == 1) return;
+
+        int n = target.Length;
+        int k = exp;
+        int r = 1 << (k - 1);
+        for (int m = k; m > 0; m--) 
+        {
+            for (int l = 0; l < n; l += (r << 1)) 
+            {
+                long wi = 1;
+                for (int i = 0; i < r; i++) 
+                {
+                    long temp = (target[l + i] + target[l + i + r]) % _mod;
+                    target[l + i + r] = (target[l + i] - target[l + i + r]) * wi % _mod;
+                    target[l + i] = temp;
+                    wi = wi * root[m] % _mod;
+                }
+            }
+            r >>= 1;
+        }
+    }
+
+    private void ButterflyINTT(Span<long> target, int exp, long[] root)
+    {
+        if (target.Length == 1)
+            return;
+        int n = target.Length;
+        int k = exp;
+        int r = 1;
+        for (int m = 1; m < k + 1; m++)
+        {
+            for (int l = 0; l < n; l += (r << 1)) 
+            {
+                long wi = 1;
+                for (int i = 0; i < r; i++) 
+                {
+                    long temp = (target[l + i] + target[l + i + r] * wi) % _mod;
+                    target[l + i + r] = (target[l + i] - target[l + i + r] * wi) % _mod;
+                    target[l + i] = temp;
+                    wi = wi * root[m] % _mod;
+                }
+            }
+            r <<= 1;
+        }
+
+        long ni = Inverse(n, _mod);
+        for (int i = 0; i < n; i++) {
+            target[i] = ((target[i] * ni % _mod) + _mod) % _mod;
+        }
+    }
+
     public long[] CalcConvolution(long[] a, long[] b)
     {
         int dsize = a.Length + b.Length;
 
         int exp = 0;
-        while ((1 << exp) <= dsize)
+        while ((1 << exp) < dsize)
         {
             exp++;
         }
@@ -165,26 +236,22 @@ public sealed class Convolution
             throw new InvalidOperationException("Data too large.");
         }
 
-        long[] resizedA = new long[n];
-        long[] resizedB = new long[n];
-        Array.Copy(a, 0, resizedA, 0, a.Length);
-        Array.Copy(b, 0, resizedB, 0, b.Length);
-
-        NTT(resizedA, n, exp, _root);
-        NTT(resizedB, n, exp, _root);
-
+        long[] buffer = new long[n];
         long[] c = new long[n];
+
+        Array.Copy(a, 0, c, 0, a.Length);
+        Array.Copy(b, 0, buffer, 0, b.Length);
+
+        ButterflyNTT(c, exp, _root);
+        ButterflyNTT(buffer, exp, _root);
+
         for (int i = 0; i < n; i++)
         {
-            c[i] = (resizedA[i] * resizedB[i]) % _mod;
+            c[i] *= buffer[i];
+            c[i] %= _mod;
         }
 
-        NTT(c, n, exp, _inverseRoot);
-        long invN = Inverse(n, _mod);
-        for (int i = 0; i < n; i++)
-        {
-            c[i] = (c[i] * invN) % _mod;
-        }
+        ButterflyINTT(c, exp, _inverseRoot);
 
         return c;
     }
@@ -237,21 +304,5 @@ public sealed class Convolution
         }
 
         return (SafeMod(r, m), m);
-    }
-
-    // m1, m2はNTT-Friendlyで大きめの素数
-    public static long[] DualModConvolutionCRT(long[] a, long[] b, long m1, long m2)
-    {
-        Convolution c1 = new(m1);
-        Convolution c2 = new(m2);
-        long[] res1 = c1.CalcConvolution(a, b);
-        long[] res2 = c2.CalcConvolution(a, b);
-        long[] restored = new long[res1.Length];
-        for (int i = 0; i < res1.Length; i++)
-        {
-            restored[i] = CRT(res1[i], m1, res2[i], m2).rem;
-        }
-
-        return restored;
     }
 }
