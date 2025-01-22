@@ -491,6 +491,19 @@ public abstract class GraphDecorator<T> : GraphBase<T> where T : struct, INumber
     }
 }
 
+public abstract class DirectedGraphDecorator<T> : GraphBase<T> where T : struct, INumber<T>, IMinMaxValue<T>
+{
+    protected DirectedGraph<T> _graph;
+
+    public DirectedGraph<T> Graph => _graph;
+    
+    public DirectedGraphDecorator(DirectedGraph<T> graph)
+    {
+        _graph = graph;
+        Sync(graph.VertexCount, graph.AdjList, graph.DirectionAwareEdges);
+    }
+}
+
 public class TreeDecorator<T> : GraphDecorator<T> where T : struct, INumber<T>, IMinMaxValue<T>
 {
     public TreeDecorator(Graph<T> graph) : base(graph)
@@ -551,6 +564,64 @@ public class TreeDecorator<T> : GraphDecorator<T> where T : struct, INumber<T>, 
         dist = BfsFrom(v);
 
         return dist.Max();
+    }
+
+    public override void AddEdge(int a, int b, T weight)
+    {
+        _graph.AddEdge(a, b, weight);
+    }
+}
+
+public class FunctionalGraphDecorator<T> : DirectedGraphDecorator<T> where T : struct, INumber<T>, IMinMaxValue<T>
+{
+    public FunctionalGraphDecorator(DirectedGraph<T> graph) : base(graph)
+    {
+        for (int i = 0; i < _vertexCount; i++)
+        {
+            if (_adjList[i].Count != 1)
+            {
+                throw new InvalidOperationException("Not a functional graph.");
+            }
+        }
+    }
+
+    public (List<List<int>> cycles, Graph<T> trees) SplitCycleTree(bool sortCycle = false)
+    {
+        List<List<int>> scc = _graph.SplitSCC();
+
+        List<List<int>> cycles = new();
+        Graph<T> tree = new(_vertexCount);
+
+        for (int i = 0; i < scc.Count; i++)
+        {
+            if (scc[i].Count == 1 && _adjList[scc[i][0]][0].To != scc[i][0])
+            {
+                // part of the trees
+                int u = scc[i][0];
+                tree.AddEdge(u, _adjList[u][0].To, _adjList[u][0].Weight);
+            }
+            else
+            {
+                // cycle
+                if (sortCycle)
+                {
+                    List<int> sorted = new(scc[i].Count);
+                    sorted.Add(scc[i][0]);
+                    for (int j = 1; j < scc[i].Count; j++)
+                    {
+                        sorted.Add(_adjList[sorted[^1]][0].To);
+                    }
+
+                    cycles.Add(sorted);
+                }
+                else
+                {
+                    cycles.Add(scc[i]);
+                }
+            }
+        }
+
+        return (cycles, tree);
     }
 
     public override void AddEdge(int a, int b, T weight)
