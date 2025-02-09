@@ -1,89 +1,6 @@
-// 平衡二分探索木を利用してソートされた集合を管理する.
-public sealed class Set<T> where T : IComparable<T>
-{
-    private AVLTree<T> _tree;
-
-    public T Max => _tree.Max();
-    public T Min => _tree.Min();
-
-    public int Count => _tree.Count;
-
-    public Set()
-    {
-        _tree = new();
-    }
-
-    // 要素を追加する.
-    // O(logN)
-    public void Add(T item)
-    {
-        _tree.Add(item);
-    }
-
-    // 要素を削除する.
-    // O(logN)
-    public void Remove(T item)
-    {
-        _tree.Remove(item);
-    }
-
-    // 要素が含まれているかを返す.
-    // O(logN)
-    public bool Contains(T item)
-    {
-        return _tree.Contains(item);
-    }
-
-    // itemのインデックスを返す.
-    // O(logN)
-    public int IndexOf(T item)
-    {
-        return _tree.IndexOf(item);
-    }
-
-    // 値がvalue以上となる最初のインデックスを返す.
-    public int LowerBound(T value)
-    {
-        return _tree.LowerBound(value);
-    }
-
-    public T LowerBoundValue(T value, T fallback)
-    {
-        return _tree.LowerBoundValue(value, fallback);
-    }
-
-    // インデックスで値を取得する.
-    public T GetByIndex(int index)
-    {
-        return _tree.GetByIndex(index);
-    }
-
-    public void RemoveByIndex(int index)
-    {
-        _tree.RemoveByIndex(index);
-    }
-
-    // 昇順ソートされたリストを返す.
-    public List<T> OrderAscending()
-    {
-        return _tree.OrderAscending();
-    }
-
-    // 降順ソートされたリストを返す.
-    public List<T> OrderDescending()
-    {
-        return _tree.OrderDescending();
-    }
-
-    public void DebugPrintTree()
-    {
-        _tree.PrintTree();
-    }
-}
-
-// AVL木, 平衡二分探索木.
+// AVL木, 平衡二分探索木set.
 // 参考: https://zenn.dev/student_blog/articles/670eee14e04d46
-public sealed class AVLTree<T> where T : IComparable<T>
+public sealed class Set<T> where T : IComparable<T>
 {
     private sealed class Node
     {
@@ -155,7 +72,7 @@ public sealed class AVLTree<T> where T : IComparable<T>
 
     public int Count => SizeOf(_rootNode);
 
-    public AVLTree()
+    public Set()
     {
         _rootNode = null;
     }
@@ -481,7 +398,34 @@ public sealed class AVLTree<T> where T : IComparable<T>
     }
 
 
-
+    public T Max
+    {
+        get
+        {
+            if (_rootNode is null)
+            {
+                throw new InvalidOperationException("No item in the set.");
+            }
+            else
+            {
+                return GetMaxNode(_rootNode).Value;
+            }
+        }
+    }
+    public T Min
+    {
+        get
+        {
+            if (_rootNode is null)
+            {
+                throw new InvalidOperationException("No item in the set.");
+            }
+            else
+            {
+                return GetMinNode(_rootNode).Value;
+            }
+        }
+    }
 
     public bool Contains(T value)
     {
@@ -496,16 +440,6 @@ public sealed class AVLTree<T> where T : IComparable<T>
         }
 
         return false;
-    }
-
-    public T Max()
-    {
-        return GetMaxNode(_rootNode).Value;
-    }
-
-    public T Min()
-    {
-        return GetMinNode(_rootNode).Value;
     }
 
     public T GetByIndex(int index)
