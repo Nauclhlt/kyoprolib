@@ -36,19 +36,8 @@ public sealed class Convolution
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static long CalcPow(long b, long exp, long mod)
+    public static long CalcPow(long b, long exp, long mod)
     {
-        // if (exp == 0) return 1;
-        // if (exp == 1) return b % mod;
-
-        // long m = CalcPow(b, exp / 2L, mod);
-        // m *= m;
-		// m %= mod;
-        // if (exp % 2L == 1) m *= b % mod;
-        // m %= mod;
-
-        // return m;
-
         b %= mod;
 
         long res = 1L;
@@ -125,48 +114,7 @@ public sealed class Convolution
             root[i] = (root[i + 1] * root[i + 1]) % _mod;
         }
     }
-
-    private void NTT(long[] target, int size, int exp, long[] root)
-    {
-        if (size == 1)
-        {
-            return;
-        }
-        else
-        {
-            int half = size >> 1;
-            
-            long[] odd = new long[half];
-            long[] even = new long[half];
-
-            for (int i = 0; i < size; i++)
-            {
-                if ((i & 1) == 0)
-                {
-                    even[i >> 1] = target[i];
-                }
-                else
-                {
-                    odd[(i - 1) >> 1] = target[i];
-                }
-            }
-
-            NTT(even, half, exp - 1, root);
-            NTT(odd, half, exp - 1, root);
-
-            long r = root[exp];
-
-            long f = 1L;
-
-            for (int i = 0; i < size; i++)
-            {
-                target[i] = (even[i % half] + (f * odd[i % half]) % _mod) % _mod;
-                f *= r;
-                f %= _mod;
-            }
-        }
-    }
-
+    
     private void ButterflyNTT(Span<long> target, int exp, long[] root)
     {
         if (target.Length == 1) return;
