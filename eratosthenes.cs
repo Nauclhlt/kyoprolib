@@ -67,15 +67,22 @@ public sealed class Eratosthenes
     {
         if (n > _n) throw new InvalidOperationException();
         List<int> divs = new();
-        int k = 1;
-        int p = n;
-        while (_minFactor[p] != 1)
+        var factors = PrimeFactorize(n);
+
+        divs.Add(1);
+        
+        for (int i = 0; i < factors.Count; i++)
         {
-            int d = k * _minFactor[p];
-            divs.Add(d);
-            if (n / d != d) divs.Add(n / d);
-            k *= _minFactor[p];
-            p /= _minFactor[p];
+            int len = divs.Count;
+            for (int j = 0; j < len; j++)
+            {
+                int f = factors[i].Item1;
+                for (int k = 0; k < factors[i].Item2; k++)
+                {
+                    divs.Add(divs[j] * f);
+                    f *= factors[i].Item1;
+                }
+            }
         }
 
         return divs;
