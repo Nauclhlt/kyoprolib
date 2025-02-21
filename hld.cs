@@ -62,77 +62,99 @@ public sealed class HeavyLightDecomposition<TV, TE> where TV : struct where TE :
         _parentEdge = new int[_n];
         _depth = new int[_n];
 
-        SizeParentDfs(0, -1, 0, new(-1, -1, -1, _edgeIdentity));
-
-        HLD(0, 0, new (-1, -1, -1, _edgeIdentity));
+        RecursiveFreeSizeParent();
+        RecursiveFreeHLD();
 
         _vertexSeg = new(_n, _vmonoid, (x, a) => a, _vertexIdentity);
         _vertexSeg.Build(_vertexArray.ToArray());
         _edgeSeg = new(_vertexEdgeArray.Count, _emonoid, (x, a) => a, _edgeIdentity);
         _edgeSeg.Build(_vertexEdgeArray.ToArray());
-
-        print(_hld);
-        print(_vertexArray);
-        print(_vertexEdgeArray);
     }
 
-    private void SizeParentDfs(int v, int prev, int depth, HLEdge<TE> edge)
+    private void RecursiveFreeSizeParent()
     {
-        if (edge.From != -1)
-        {
-            _parentEdge[v] = edge.Number;
-        }
-        _size[v] = 1;
-        _parent[v] = prev;
-        _depth[v] = depth;
-        for (int i = 0; i < _graph[v].Count; i++)
-        {
-            if (_graph[v][i].To != prev)
-                SizeParentDfs(_graph[v][i].To, v, depth + 1, _graph[v][i]);
-            _size[v] += _size[_graph[v][i].To];
-        }
-    }
+        Stack<(int, int, int, HLEdge<TE>)> stack = new();
+        Stack<(int, int)> backstack = new();
+        stack.Push((0, -1, 0, new (-1, -1, -1, _edgeIdentity)));
 
-    private void HLD(int v, int root, HLEdge<TE> edge)
-    {
-        if (edge.From != -1)
+        while (stack.Count > 0)
         {
-            _edgePositions[edge.Number] = _vertexEdgeArray.Count;
-            _vertexEdgeArray.Add(edge.Weight);
-        }
-        _vertexPositions[v] = _vertexArray.Count;
-        _vertexArray.Add(_v[v]);
-        _edgeVertexPositions[v] = _vertexEdgeArray.Count;
-        _vertexEdgeArray.Add(_edgeIdentity);
+            (int v, int prev, int depth, HLEdge<TE> edge) = stack.Pop();
 
-        _hld.Add(v);
-        _root[v] = root;
-
-        if (_graph[v].Count == 0) 
-        {
-            return;
-        }
-
-        int max = 0;
-        int idx = -1;
-        for (int i = 0; i < _graph[v].Count; i++)
-        {
-            int size = _size[_graph[v][i].To];
-            if (size > max)
+            if (edge.From != -1)
             {
-                max = size;
-                idx = i;
+                _parentEdge[v] = edge.Number;
+            }
+            _parent[v] = prev;
+            _depth[v] = depth;
+            _size[v] = 1;
+
+            for (int i = 0; i < _graph[v].Count; i++)
+            {
+                if(_graph[v][i].To != prev)
+                {
+                    stack.Push((_graph[v][i].To, v, depth + 1, _graph[v][i]));
+                    backstack.Push((_graph[v][i].To, v));
+                }
             }
         }
 
-        HLD(_graph[v][idx].To, root, _graph[v][idx]);
-
-        for (int i = 0; i < _graph[v].Count; i++)
+        while (backstack.Count > 0)
         {
-            if (i != idx)
+            (int from, int to) = backstack.Pop();
+            _size[to] += _size[from];
+        }
+    }
+
+    private void RecursiveFreeHLD()
+    {
+        Stack<(int, int, HLEdge<TE>)> stack = new();
+        stack.Push((0, 0, new(-1, -1, -1, _edgeIdentity)));
+
+        while (stack.Count > 0)
+        {
+            (int v, int root, HLEdge<TE> edge) = stack.Pop();
+            if (edge.From != -1)
             {
-                HLD(_graph[v][i].To, _graph[v][i].To, new (-1, -1, -1, _edgeIdentity));
+                _edgePositions[edge.Number] = _vertexEdgeArray.Count;
+                _vertexEdgeArray.Add(edge.Weight);
             }
+            _vertexPositions[v] = _vertexArray.Count;
+            _vertexArray.Add(_v[v]);
+            _edgeVertexPositions[v] = _vertexEdgeArray.Count;
+            _vertexEdgeArray.Add(_edgeIdentity);
+
+            _hld.Add(v);
+            _root[v] = root;
+
+            if (_graph[v].Count == 0 || (_graph[v].Count == 1 && _depth[_graph[v][0].To] < _depth[v])) 
+            {
+                continue;
+            }
+
+            int max = 0;
+            int idx = -1;
+            for (int i = 0; i < _graph[v].Count; i++)
+            {
+                if (_depth[_graph[v][i].To] < _depth[v]) continue;
+                int size = _size[_graph[v][i].To];
+                if (size > max)
+                {
+                    max = size;
+                    idx = i;
+                }
+            }
+
+            for (int i = 0; i < _graph[v].Count; i++)
+            {
+                if (_depth[_graph[v][i].To] < _depth[v]) continue;
+                if (i != idx)
+                {
+                    stack.Push((_graph[v][i].To, _graph[v][i].To, new (-1, -1, -1, _edgeIdentity)));
+                }
+            }
+
+            stack.Push((_graph[v][idx].To, root, _graph[v][idx]));
         }
     }
 
