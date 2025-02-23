@@ -4,10 +4,12 @@ public sealed class SparseTable<T>
     private T[][] _table;
     private int[] _lookup;
     private int _length;
+    private T _identity;
 
-    public SparseTable(T[] array, Func<T, T, T> op)
+    public SparseTable(T[] array, T identity, Func<T, T, T> op)
     {
         _op = op;
+        _identity = identity;
         _length = array.Length;
         int exp = 0;
         while (1 << (exp + 1) <= array.Length) exp++;
@@ -36,7 +38,7 @@ public sealed class SparseTable<T>
 
     public T Query(int l, int r)
     {
-        if (l >= r) throw new InvalidOperationException();
+        if (l >= r) return _identity;
         int len = r - l;
         int x = _lookup[len];
         return _op(_table[x][l], _table[x][r - (1 << x)]);
