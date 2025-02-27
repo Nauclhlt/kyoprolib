@@ -697,6 +697,11 @@ private:
     AVLTree<T> _tree;
 
 public:
+    inline int Count()
+    {
+        return _tree.Count();
+    }
+
     inline T Max()
     {
         return _tree.Max();
