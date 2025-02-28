@@ -76,6 +76,56 @@ public sealed class FlowGraph<T> where T : struct, INumber<T>, IMinMaxValue<T>
         return MaxFlowWithEdges(source, sink, algo: algo).flow;
     }
 
+    public (T mincut, bool[] sets, List<FlowEdge> edges) MinCut(int source, int sink, MaxFlowAlgo algo = MaxFlowAlgo.Dinic)
+    {
+        (T maxflow, List<FlowEdge> flowEdges) = MaxFlowWithEdges(source, sink, algo: algo);
+
+        bool[] s = new bool[_n];
+        bool[] seen = new bool[_n];
+        Queue<int> queue = new();
+        queue.Enqueue(source);
+
+        while (queue.Count > 0)
+        {
+            int n = queue.Dequeue();
+
+            if (seen[n]) continue;
+
+            seen[n] = true;
+            s[n] = true;
+
+            for (int i = 0; i < _graph[n].Count; i++)
+            {
+                FlowEdge e = _graph[n][i];
+                if ((e.Number & 1) == 0)
+                {
+                    if ( e.Capacity - flowEdges[e.Number >> 1].Capacity > T.Zero )
+                    {
+                        queue.Enqueue(e.To);
+                    }
+                }
+                else
+                {
+                    if (flowEdges[ReverseNumber(e.Number) >> 1].Capacity > T.Zero)
+                    {
+                        queue.Enqueue(e.To);
+                    }
+                }
+            }
+        }
+
+        List<FlowEdge> edges = new();
+        for (int i = 0; i < flowEdges.Count; i++)
+        {
+            if (s[flowEdges[i].From] && !s[flowEdges[i].To])
+            {
+                edges.Add(flowEdges[i]);
+            }
+        }
+
+        return (maxflow, s, edges);
+    }
+
     private (T flow, List<FlowEdge> edges) InternalMaxFlowCostScalingDinic(int source, int sink)
     {
         if (_maxCapacity == T.Zero) return (T.Zero, null);
