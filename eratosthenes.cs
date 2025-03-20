@@ -1,3 +1,6 @@
+/// <summary>
+/// エラトステネスの篩で出来る嬉しいことをいくつか処理する。
+/// </summary>
 public sealed class Eratosthenes
 {
     private bool[] _isPrime;
@@ -5,6 +8,10 @@ public sealed class Eratosthenes
     private int[] _mobius;
     private int _n;
 
+    /// <summary>
+    /// 構築する。O((max)loglog(max));
+    /// </summary>
+    /// <param name="max"></param>
     public Eratosthenes(int max)
     {
         _n = max;
@@ -38,12 +45,28 @@ public sealed class Eratosthenes
         }
     }
 
+    /// <summary>
+    /// μ(n)を返す。μはメビウス関数。
+    /// </summary>
+    /// <param name="n"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public int Mobius(int n)
     {
         if (n > _n) throw new InvalidOperationException();
         return _mobius[n];
     }
 
+    /// <summary>
+    /// <para>f(n)がnの約数d全体に対してF(d)の総和であるとき、メビウスの反転公式を適用してF(n)を求める。計算量: O(d(n)), dは約数関数</para>
+    /// 注意: int→Tへの変換をitotに渡す。
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="n"></param>
+    /// <param name="f"></param>
+    /// <param name="itot"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public T MobiusInverse<T>(int n, T[] f, Func<int, T> itot) where T : IAdditiveIdentity<T, T>, IAdditionOperators<T, T, T>, IMultiplyOperators<T, T, T>
     {
         if (n > _n) throw new InvalidOperationException();
@@ -57,12 +80,24 @@ public sealed class Eratosthenes
         return res;
     }
 
+    /// <summary>
+    /// nを割り切る最小の素数を返す。計算量: O(1)
+    /// </summary>
+    /// <param name="n"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public int MinFactor(int n)
     {
         if (n > _n) throw new InvalidOperationException();
         return _minFactor[n];
     }
 
+    /// <summary>
+    /// nの約数をすべて返す。計算量: O(d(n)), dは約数関数
+    /// </summary>
+    /// <param name="n"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public List<int> GetDivisors(int n)
     {
         if (n > _n) throw new InvalidOperationException();
@@ -88,6 +123,12 @@ public sealed class Eratosthenes
         return divs;
     }
 
+    /// <summary>
+    /// nの素因数分解を返す。計算量: O(logn)
+    /// </summary>
+    /// <param name="n"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public List<(int, int)> PrimeFactorize(int n)
     {
         if (n > _n) throw new InvalidOperationException();
@@ -108,6 +149,12 @@ public sealed class Eratosthenes
         return result;
     }
 
+    /// <summary>
+    /// nが素数ならtrue, 合成数ならfalseを返す。計算量: O(1)
+    /// </summary>
+    /// <param name="n"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public bool IsPrime(int n)
     {
         if (n > _n) throw new InvalidOperationException();

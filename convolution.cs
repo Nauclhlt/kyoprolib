@@ -1,3 +1,6 @@
+/// <summary>
+/// 素数mod上での畳み込み。
+/// </summary>
 public sealed class Convolution
 {
     private readonly long _mod;
@@ -7,6 +10,10 @@ public sealed class Convolution
     private long[] _root;
     private long[] _inverseRoot;
 
+    /// <summary>
+    /// 初期化。modはNTT-Friendlyじゃないと使い物にならない。計算量: modに依存するが軽い
+    /// </summary>
+    /// <param name="mod"></param>
     public Convolution(long mod = 998244353L)
     {
         _mod = mod;
@@ -168,6 +175,13 @@ public sealed class Convolution
         }
     }
 
+    /// <summary>
+    /// aとbの畳み込みを計算して返す。計算量: O(NlogN), 定数倍はそこそこ重い。
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public long[] CalcConvolution(long[] a, long[] b)
     {
         int dsize = a.Length + b.Length;

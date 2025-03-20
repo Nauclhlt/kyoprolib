@@ -1,3 +1,7 @@
+/// <summary>
+/// 辺に容量が付いた有向グラフ。
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public sealed class FlowGraph<T> where T : struct, INumber<T>, IMinMaxValue<T>
 {
     public readonly struct FlowEdge
@@ -41,6 +45,12 @@ public sealed class FlowGraph<T> where T : struct, INumber<T>, IMinMaxValue<T>
         _maxCapacity = T.Zero;
     }
 
+    /// <summary>
+    /// fromからtoに容量capacityの辺を追加する。計算量: O(1)
+    /// </summary>
+    /// <param name="from"></param>
+    /// <param name="to"></param>
+    /// <param name="capacity"></param>
     public void AddEdge(int from, int to, T capacity)
     {
         int num = _edges.Count * 2;
@@ -60,6 +70,15 @@ public sealed class FlowGraph<T> where T : struct, INumber<T>, IMinMaxValue<T>
         return n % 2 == 0 ? n + 1 : n - 1;
     }
 
+    /// <summary>
+    /// <para>sourceからsinkに流せる最大のフローと各辺の状態を返す。</para>
+    /// <para>計算量(Dinic): O(VE^2), 二部グラフならO(V√E)</para>
+    /// <para>計算量(Push-Relabel): O(V^2√E), 二部グラフの場合もこの計算量</para>
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="sink"></param>
+    /// <param name="algo"></param>
+    /// <returns></returns>
     public (T flow, List<FlowEdge> edges) MaxFlowWithEdges(int source, int sink, MaxFlowAlgo algo = MaxFlowAlgo.Dinic)
     {
         if (algo == MaxFlowAlgo.PushRelabel)
@@ -71,11 +90,29 @@ public sealed class FlowGraph<T> where T : struct, INumber<T>, IMinMaxValue<T>
         return (T.Zero, null);
     }
 
+    /// <summary>
+    /// <para>sourceからsinkに流せる最大のフローを返す。</para>
+    /// <para>計算量(Dinic): O(VE^2), 二部グラフならO(V√E)</para>
+    /// <para>計算量(Push-Relabel): O(V^2√E), 二部グラフの場合もこの計算量</para>
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="sink"></param>
+    /// <param name="algo"></param>
+    /// <returns></returns>
     public T MaxFlow(int source, int sink, MaxFlowAlgo algo = MaxFlowAlgo.Dinic)
     {
         return MaxFlowWithEdges(source, sink, algo: algo).flow;
     }
 
+    /// <summary>
+    /// <para>sourceからsinkへの最小カットを返す。</para>
+    /// <para>計算量(Dinic): O(VE^2), 二部グラフならO(V√E)</para>
+    /// <para>計算量(Push-Relabel): O(V^2√E), 二部グラフの場合もこの計算量</para>
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="sink"></param>
+    /// <param name="algo"></param>
+    /// <returns></returns>
     public (T mincut, bool[] sets, List<FlowEdge> edges) MinCut(int source, int sink, MaxFlowAlgo algo = MaxFlowAlgo.Dinic)
     {
         (T maxflow, List<FlowEdge> flowEdges) = MaxFlowWithEdges(source, sink, algo: algo);

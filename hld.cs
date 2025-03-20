@@ -1,3 +1,8 @@
+/// <summary>
+/// HL分解(Heavy-Light Decomposition)でパスクエリや更新を処理する。
+/// </summary>
+/// <typeparam name="TV"></typeparam>
+/// <typeparam name="TE"></typeparam>
 public sealed class HeavyLightDecomposition<TV, TE> where TV : struct where TE : struct
 {
     private int _n;
@@ -158,12 +163,22 @@ public sealed class HeavyLightDecomposition<TV, TE> where TV : struct where TE :
         }
     }
 
+    /// <summary>
+    /// 頂点の値を更新する。計算量: O(logV)
+    /// </summary>
+    /// <param name="v"></param>
+    /// <param name="value"></param>
     public void SetVertex(int v, TV value)
     {
         _v[v] = value;
         _vertexSeg.Apply(_vertexPositions[v], value);
     }
 
+    /// <summary>
+    /// 辺の値を更新する。計算量: O(V+E)
+    /// </summary>
+    /// <param name="e"></param>
+    /// <param name="value"></param>
     public void SetEdge(int e, TE value)
     {
         _edges[e] = new(_edges[e].From, _edges[e].To, _edges[e].Number, value);
@@ -173,6 +188,12 @@ public sealed class HeavyLightDecomposition<TV, TE> where TV : struct where TE :
         }
     }
 
+    /// <summary>
+    /// u,v間のパスに含まれる頂点に対するクエリを処理する。計算量: O(log^2V)
+    /// </summary>
+    /// <param name="u"></param>
+    /// <param name="v"></param>
+    /// <returns></returns>
     public TV QueryVertexPath(int u, int v)
     {
         if (u == v) return _v[u];
@@ -206,6 +227,12 @@ public sealed class HeavyLightDecomposition<TV, TE> where TV : struct where TE :
         return res;
     }
 
+    /// <summary>
+    /// u,v間のパスに含まれる辺に対するクエリを処理する。計算量: O(log^2(V+E))
+    /// </summary>
+    /// <param name="u"></param>
+    /// <param name="v"></param>
+    /// <returns></returns>
     public TE QueryEdgePath(int u, int v)
     {
         if (u == v) return _edgeIdentity;
@@ -242,6 +269,12 @@ public sealed class HeavyLightDecomposition<TV, TE> where TV : struct where TE :
         return res;
     }
 
+    /// <summary>
+    /// uとvのLCA(最小共通祖先)を返す。計算量: O(log^2V)
+    /// </summary>
+    /// <param name="u"></param>
+    /// <param name="v"></param>
+    /// <returns></returns>
     public int Lca(int u, int v)
     {
         if (u == v) return u;

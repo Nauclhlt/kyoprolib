@@ -1,12 +1,6 @@
-// FPSを扱う用のクラス.
-// 和・差: O(n)
-// 積(畳み込み): O(nlogn)
-// 先頭n項inv: O(nlogn)
-// 先頭n項exp: O(nlogn)
-// 先頭n項log: O(nlogn)
-// 先頭n項pow: O(nlogn)
-// @author Nauclhlt.
-// depends on: Convolution
+/// <summary>
+/// FPSを扱う。定数倍はあんまり良くない。
+/// </summary>
 public sealed class FPS
 {
     private const long Mod = 998244353L;
@@ -60,11 +54,20 @@ public sealed class FPS
         return ((a % Mod) + Mod) % Mod;
     }
 
+    /// <summary>
+    /// 長さを変更する。計算量: O(n)
+    /// </summary>
+    /// <param name="length"></param>
     public void Resize(int length)
     {
         Array.Resize(ref _coef, length);
     }
 
+    /// <summary>
+    /// 長さをlengthに変更したものを取得する。計算量: O(n)
+    /// </summary>
+    /// <param name="length"></param>
+    /// <returns></returns>
     public FPS GetResized(int length)
     {
         long[] res = new long[length];
@@ -72,6 +75,14 @@ public sealed class FPS
         return new(res);
     }
 
+    /// <summary>
+    /// aのasize項とbのbsize項の積を計算する。計算量: O(nlogn)
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="asize"></param>
+    /// <param name="b"></param>
+    /// <param name="bsize"></param>
+    /// <returns></returns>
     public static FPS ResizedMultiply(FPS a, int asize, FPS b, int bsize)
     {
         long[] res = Conv.CalcConvolution(a._coef.AsSpan(0, asize), b._coef.AsSpan(0, bsize));
@@ -114,6 +125,12 @@ public sealed class FPS
         return new(res);
     }
 
+    /// <summary>
+    /// 逆元の先頭n項を求める。計算量: O(nlogn)
+    /// </summary>
+    /// <param name="n"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     public FPS Inv(int n)
     {
         if (_coef[0] == 0) throw new Exception("No Inv");
@@ -134,6 +151,11 @@ public sealed class FPS
         return g;
     }
 
+    /// <summary>
+    /// expの先頭n項を求める。計算量: O(nlogn)
+    /// </summary>
+    /// <param name="n"></param>
+    /// <returns></returns>
     public FPS Exp(int n)
     {
         FPS g = new(new long[] {1});
@@ -152,6 +174,10 @@ public sealed class FPS
         return g;
     }
 
+    /// <summary>
+    /// 微分を求める。計算量: O(n)
+    /// </summary>
+    /// <returns></returns>
     public FPS Diff()
     {
         FPS result = new (Length);
@@ -162,6 +188,10 @@ public sealed class FPS
         return result;
     }
 
+    /// <summary>
+    /// 積分を求める。計算量: O(n)
+    /// </summary>
+    /// <returns></returns>
     public FPS Integral()
     {
         FPS result = new(Length + 1);
@@ -172,6 +202,9 @@ public sealed class FPS
         return result;
     }
 
+    /// <summary>
+    /// in-placeに積分を求める。計算量: O(n)
+    /// </summary>
     public void InplaceIntegral()
     {
         for (int i = Length - 1; i >= 1; i--)
@@ -181,6 +214,12 @@ public sealed class FPS
         _coef[0] = 0;
     }
 
+    /// <summary>
+    /// logの先頭n項を求める。計算量: O(nlogn)
+    /// </summary>
+    /// <param name="n"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public FPS Log(int n)
     {
         if (_coef[0] != 1)
@@ -199,6 +238,12 @@ public sealed class FPS
         return log;
     }
 
+    /// <summary>
+    /// exponent乗の先頭n項を求める。計算量: O(nlogn), 絶望的に定数倍が重く使えない可能性がある
+    /// </summary>
+    /// <param name="exponent"></param>
+    /// <param name="n"></param>
+    /// <returns></returns>
     public FPS Power(int exponent, int n)
     {
         FPS log = Log(n);

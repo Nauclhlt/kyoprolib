@@ -1,3 +1,8 @@
+/// <summary>
+/// 容量、コスト付きの有向グラフ。
+/// </summary>
+/// <typeparam name="T"></typeparam>
+/// <typeparam name="C"></typeparam>
 public sealed class CostFlowGraph<T, C> where T : struct, INumber<T>, IMinMaxValue<T> where C : struct, INumber<C>, IMinMaxValue<C>
 {
     public readonly struct CostFlowEdge
@@ -43,6 +48,13 @@ public sealed class CostFlowGraph<T, C> where T : struct, INumber<T>, IMinMaxVal
         _maxCapacity = T.Zero;
     }
 
+    /// <summary>
+    /// fromからtoに、容量capacity, コストcostの辺を張る。計算量: O(1)
+    /// </summary>
+    /// <param name="from"></param>
+    /// <param name="to"></param>
+    /// <param name="capacity"></param>
+    /// <param name="cost"></param>
     public void AddEdge(int from, int to, T capacity, C cost)
     {
         int num = _edges.Count * 2;
@@ -62,6 +74,15 @@ public sealed class CostFlowGraph<T, C> where T : struct, INumber<T>, IMinMaxVal
         return n % 2 == 0 ? n + 1 : n - 1;
     }
 
+    /// <summary>
+    /// <para>sourceからsinkにsourceFlow流したときの最小コストおよび辺の状態を返す。計算量: O((sourceFlow)(V+E)log(V+E))</para>
+    /// <para>もし流量sourceFlow流せなければC.MaxValueが帰る。</para>
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="sink"></param>
+    /// <param name="sourceFlow"></param>
+    /// <param name="algo"></param>
+    /// <returns></returns>
     public (C mincost, List<CostFlowEdge> edges) MinCostFlowWithEdges(int source, int sink, T sourceFlow, MinCostFlowAlgo algo = MinCostFlowAlgo.DijkstraPrimalDual)
     {
         if (algo == MinCostFlowAlgo.DijkstraPrimalDual)
@@ -69,6 +90,20 @@ public sealed class CostFlowGraph<T, C> where T : struct, INumber<T>, IMinMaxVal
         else if (algo == MinCostFlowAlgo.BellmanFordDijkstraPrimalDual)
             return InternalMinCostFlowBellmanFordDijkstraPrimalDual(source, sink, sourceFlow);
         return (C.MaxValue, null);
+    }
+
+    /// <summary>
+    /// <para>sourceからsinkにsourceFlow流したときの最小コストを返す。計算量: O((sourceFlow)(V+E)log(V+E))</para>
+    /// <para>もし流量sourceFlow流せなければC.MaxValueが帰る。</para>
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="sink"></param>
+    /// <param name="sourceFlow"></param>
+    /// <param name="algo"></param>
+    /// <returns></returns>
+    public C MinCostFlow(int source, int sink, T sourceFlow, MinCostFlowAlgo algo = MinCostFlowAlgo.DijkstraPrimalDual)
+    {
+        return MinCostFlowWithEdges(source, sink, sourceFlow, algo).mincost;
     }
 
     private (C mincost, List<CostFlowEdge> edges) InternalMinCostFlowDijkstraPrimalDual(int source, int sink, T sourceFlow)
@@ -325,6 +360,12 @@ public sealed class CostFlowGraph<T, C> where T : struct, INumber<T>, IMinMaxVal
 
 public enum MinCostFlowAlgo
 {
+    /// <summary>
+    /// ダイクストラで最短路反復。コストがすべて非負の場合。
+    /// </summary>
     DijkstraPrimalDual,
+    /// <summary>
+    /// ベルマンフォードでポテンシャル計算をしてから、ダイクストラで最短路反復。負のコストがある場合。
+    /// </summary>
     BellmanFordDijkstraPrimalDual
 }

@@ -1,6 +1,9 @@
-// Convex Hull Trick. 一次関数の最大最小クエリを処理する.
-// Depends on: Set<T>.
-// @author Nauclhlt.
+/// <summary>
+/// <para>Convex Hull Trick. 一次関数の最大/最小クエリを処理する。</para>
+/// <para>特定の場合での高速化は実装していないため、遅い場合がある。</para>
+/// <para>依存: Set</para>
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public sealed class ConvexHullTrick<T> where T : INumber<T>
 {
     // y = Ax + B
@@ -55,7 +58,11 @@ public sealed class ConvexHullTrick<T> where T : INumber<T>
         return false;
     }
 
-    // y = ax + bを追加する.
+    /// <summary>
+    /// y=ax+bを追加する。計算量: 分からん。線形時間よりは軽いはず。
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
     public void Add(T a, T b)
     {
         if (_maxQuery)
@@ -81,8 +88,11 @@ public sealed class ConvexHullTrick<T> where T : INumber<T>
         }
     }
 
-    // 最大/最小クエリを処理する.
-    // O(log^2N)
+    /// <summary>
+    /// x座標から最大/最小の値を計算する。計算量: O(log^2N)
+    /// </summary>
+    /// <param name="x"></param>
+    /// <returns></returns>
     public T Query(T x)
     {
         int left = 0;

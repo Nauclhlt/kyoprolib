@@ -1,7 +1,7 @@
-// 上位k個, および下位k個の値を管理する.
-// 各操作O(logN).
-// Depends on: NumberSet<T>
-// @author Nauclhlt.
+/// <summary>
+/// 解K個を管理するset
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public sealed class LowHighSet<T> : IEnumerable<T> where T : struct, INumber<T>
 {
     private NumberSet<T> _high;
@@ -26,8 +26,10 @@ public sealed class LowHighSet<T> : IEnumerable<T> where T : struct, INumber<T>
         _k = k;
     }
 
-    // itemを要素に追加する.
-    // O(logN)
+    /// <summary>
+    /// itemを追加する。計算量: O(logn)
+    /// </summary>
+    /// <param name="item"></param>
     public void Add(T item)
     {
         if (_low.Count < _k)
@@ -48,8 +50,11 @@ public sealed class LowHighSet<T> : IEnumerable<T> where T : struct, INumber<T>
         }
     }
 
-    // itemを削除する.
-    // O(logN)
+    /// <summary>
+    /// itemを削除する。計算量: O(logn)
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     public bool Remove(T item)
     {
         if (_low.Count < _k)
@@ -120,50 +125,69 @@ public sealed class LowHighSet<T> : IEnumerable<T> where T : struct, INumber<T>
         InsertHigh(max);
     }
 
-    // itemを含むかを返す.
-    // O(logN)
+    /// <summary>
+    /// itemが含まれるならtrue, そうでないならfalseを返す。計算量: O(logn)
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     public bool Contains(T item)
     {
         return _high.Contains(item) || _low.Contains(item);
     }
 
-    // itemが下位k個より大きい部分に入っているかを返す.
-    // O(logN)
+    /// <summary>
+    /// itemが下位K個に入っていなければtrue, そうでなければfalseを返す。計算量: O(logn)
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     public bool HighContains(T item)
     {
         return _high.Contains(item);
     }
 
-    // itemが下位k個に入っているかを返す.
-    // O(logN)
+    /// <summary>
+    /// itemが下位K個に入っていればtrue, そうでなければfalseを返す。計算量: O(logn)
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     public bool LowContains(T item)
     {
         return _low.Contains(item);
     }
 
-    // itemがいくつ含まれているかを返す.
-    // O(1)
+    /// <summary>
+    /// itemの個数を返す。計算量: O(1)
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     public int CountOf(T item)
     {
         return _high.CountOf(item) + _low.CountOf(item);
     }
 
-    // itemが下位k個より大きい部分にいくつ含まれているかを返す.
-    // O(1)
+    /// <summary>
+    /// itemが下位K個でない部分に入っている個数を返す。計算量: O(1)
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     public int HighCountOf(T item)
     {
         return _high.CountOf(item);
     }
 
-    // itemが下位k個にいくつ含まれているかを返す.
-    // O(1)
+    /// <summary>
+    /// itemが下位K個に入っている個数を返す。計算量: O(1)
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     public int LowCountOf(T item)
     {
         return _low.CountOf(item);
     }
 
-    // 中身をクリアする.
-    // O(1)
+    /// <summary>
+    /// 内容をクリアする。計算量: O(1)
+    /// </summary>
     public void Clear()
     {
         _high.Clear();

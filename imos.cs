@@ -1,6 +1,7 @@
-// いもす法を使って区間和クエリをまとめて処理する.
-// 区間は半開区間.
-// @author Nauclhlt.
+/// <summary>
+/// imos法。区間加算クエリをまとめて処理する。
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public sealed class Imos<T> where T : struct, INumber<T>
 {
     private T[] _data;
@@ -16,15 +17,23 @@ public sealed class Imos<T> where T : struct, INumber<T>
         _data = new T[len];
     }
 
-    // startを左端とする長さlengthの区間にvalueを加算する.
-    // O(1)
+    /// <summary>
+    /// [start, start + length)にvalueを加算する。計算量: O(1)
+    /// </summary>
+    /// <param name="start"></param>
+    /// <param name="length"></param>
+    /// <param name="value"></param>
     public void AddQueryLen(int start, int length, T value)
     {
         this.AddQuery(start, start + length, value);
     }
 
-    // 区間[start, end)にvalueを加算する.
-    // O(1)
+    /// <summary>
+    /// [start, end)にvalueを加算する。計算量: O(1)
+    /// </summary>
+    /// <param name="start"></param>
+    /// <param name="length"></param>
+    /// <param name="value"></param>
     public void AddQuery(int start, int end, T value)
     {
         _data[start] += value;
@@ -34,9 +43,10 @@ public sealed class Imos<T> where T : struct, INumber<T>
         }
     }
 
-    // 累積和を取って和を計算する.
-    // O(N)
-    public void Simulate()
+    /// <summary>
+    /// 累積和を取って、区間加算を反映する。計算量: O(n)
+    /// </summary>
+    public void Accumulate()
     {
         for (int i = 1; i < _data.Length; i++)
         {
@@ -44,7 +54,10 @@ public sealed class Imos<T> where T : struct, INumber<T>
         }
     }
 
-    // 中身の配列を取得する.
+    /// <summary>
+    /// 中身の配列を返す。計算量: O(1)
+    /// </summary>
+    /// <returns></returns>
     public T[] GetData()
     {
         return _data;

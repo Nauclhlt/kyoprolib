@@ -1,3 +1,7 @@
+/// <summary>
+/// Double-Ended Queueというデータ構造。先頭、末尾へのpush/popとランダムアクセスができる。
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public sealed class Deque<T> : IEnumerable<T>
 {
     private const int DefaultCapacity = 32;
@@ -52,6 +56,10 @@ public sealed class Deque<T> : IEnumerable<T>
         _buffer = newBuffer;
     }
 
+    /// <summary>
+    /// 先頭にitemを追加する。計算量: 償却O(1)
+    /// </summary>
+    /// <param name="item"></param>
     public void PushFront(T item)
     {
         if (_length == 0)
@@ -72,6 +80,10 @@ public sealed class Deque<T> : IEnumerable<T>
         }
     }
 
+    /// <summary>
+    /// 末尾にitemを追加する。計算量: 償却O(1)
+    /// </summary>
+    /// <param name="item"></param>
     public void PushBack(T item)
     {
         if (_head + _length >= _capacity)
@@ -83,6 +95,11 @@ public sealed class Deque<T> : IEnumerable<T>
         _length++;
     }
 
+    /// <summary>
+    /// 先頭からひとつ取り除く。計算量: O(1)
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public T PopFront()
     {
         if (_length == 0)
@@ -97,6 +114,11 @@ public sealed class Deque<T> : IEnumerable<T>
         return front;
     }
 
+    /// <summary>
+    /// 末尾からひとつ取り除く。計算量: O(1)
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public T PopBack()
     {
         if (_length == 0)
@@ -110,6 +132,11 @@ public sealed class Deque<T> : IEnumerable<T>
         return back;
     }
 
+    /// <summary>
+    /// 先頭の要素を返す。計算量: O(1)
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public T PeekFront()
     {
         if (_length == 0)
@@ -120,6 +147,11 @@ public sealed class Deque<T> : IEnumerable<T>
         return _buffer[_head];
     }
 
+    /// <summary>
+    /// 末尾の要素を返す。計算量: O(1)
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public T PeekBack()
     {
         if (_length == 0)
@@ -130,6 +162,11 @@ public sealed class Deque<T> : IEnumerable<T>
         return _buffer[_head + _length - 1];
     }
 
+    /// <summary>
+    /// 先頭の要素があれば、それをvalueに格納する。あればtrue, なければfalseを返す。計算量: O(1)
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
     public bool TryPeekFront(out T value)
     {
         if (_length == 0)
@@ -142,6 +179,11 @@ public sealed class Deque<T> : IEnumerable<T>
         return true;
     }
 
+    /// <summary>
+    /// 末尾の要素があれば、それをvalueに格納する。あればtrue, なければfalseを返す。計算量: O(1)
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
     public bool TryPeekBack(out T value)
     {
         if (_length == 0)
@@ -154,6 +196,10 @@ public sealed class Deque<T> : IEnumerable<T>
         return true;
     }
 
+    /// <summary>
+    /// Spanに変換する。計算量: O(1)
+    /// </summary>
+    /// <returns></returns>
     public Span<T> AsSpan()
     {
         return _buffer.AsSpan(_head, _length);
