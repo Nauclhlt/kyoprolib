@@ -1,3 +1,7 @@
+/// <summary>
+/// sparse table。処理できる演算は結合法則および冪等性を満たす必要がある。
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public sealed class SparseTable<T>
 {
     private Func<T, T, T> _op;
@@ -6,6 +10,12 @@ public sealed class SparseTable<T>
     private int _length;
     private T _identity;
 
+    /// <summary>
+    /// 構築する。計算量: O(NlogN)
+    /// </summary>
+    /// <param name="array"></param>
+    /// <param name="identity"></param>
+    /// <param name="op"></param>
     public SparseTable(T[] array, T identity, Func<T, T, T> op)
     {
         _op = op;
@@ -36,6 +46,12 @@ public sealed class SparseTable<T>
         }
     }
 
+    /// <summary>
+    /// 区間[l, r)の積を返す。計算量: O(1)
+    /// </summary>
+    /// <param name="l"></param>
+    /// <param name="r"></param>
+    /// <returns></returns>
     public T Query(int l, int r)
     {
         if (l >= r) return _identity;
