@@ -66,6 +66,73 @@ public static class BitConvolution
         return c;
     }
 
+    public static T[] SubsetConvolution<T>(int n, T[] a, T[] b) where T : struct, INumber<T>
+    {
+        System.Diagnostics.Contracts.Contract.Assert((1 << n) == a.Length || (1 << n) == b.Length);
+
+        int length = 1 << n;
+
+        T[,] c = new T[n + 1, length];
+        T[,] d = new T[n + 1, length];
+
+        for (int i = 0; i < length; i++)
+        {
+            int size = BitOperations.PopCount((uint)i);
+            c[size, i] = a[i];
+            d[size, i] = b[i];
+        }
+
+        for (int k = 0; k <= n; k++)
+        {
+            for (int bit = 0; bit < n; bit++)
+            {
+                for (int i = 0; i < length; i++)
+                {
+                    if ((i & (1 << bit)) != 0)
+                    {
+                        c[k, i] += c[k, i ^ (1 << bit)];
+                        d[k, i] += d[k, i ^ (1 << bit)];
+                    }
+                }
+            }
+        }
+
+        T[,] r = new T[n + 1, length];
+        for (int s = 0; s < length; s++)
+        {
+            for (int i = 0; i <= n; i++)
+            {
+                for (int j = 0; j <= n - i; j++)
+                {
+                    r[i + j, s] += c[i, s] * d[j, s];
+                }
+            }
+        }
+
+        for (int k = 0; k <= n; k++)
+        {
+            for (int bit = 0; bit < n; bit++)
+            {
+                for (int i = 0; i < length; i++)
+                {
+                    if ((i & (1 << bit)) != 0)
+                    {
+                        r[k, i] -= r[k, i ^ (1 << bit)];
+                    }
+                }
+            }
+        }
+
+        T[] res = new T[length];
+        for (int i = 0; i < length; i++)
+        {
+            int size = BitOperations.PopCount((uint)i);
+            res[i] = r[size, i];
+        }
+
+        return res;
+    }
+
     private static void InplaceSuperZetaTransform<T>(int n, T[] a) where T : struct, IAdditionOperators<T, T, T>, IAdditiveIdentity<T, T>, ISubtractionOperators<T, T, T>, IMultiplyOperators<T, T, T>
     {
         int length = 1 << n;
