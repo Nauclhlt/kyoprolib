@@ -283,19 +283,16 @@ public sealed class HeavyLightDecomposition<TV, TE> where TV : struct where TE :
         {
             if (_depth[_root[u]] <= _depth[_root[v]])
             {
-                int l = _vertexPositions[_root[v]];
-                int r = _vertexPositions[v] + 1;
                 v = _parent[_root[v]];
             }
             else
             {
-                int l = _vertexPositions[_root[u]];
-                int r = _vertexPositions[u] + 1;
                 u = _parent[_root[u]];
             }
         }
 
-        return int.Min(_vertexPositions[u], _vertexPositions[v]);
+        if (_depth[u] < _depth[v]) return u;
+        else return v;
     }
 }
 
