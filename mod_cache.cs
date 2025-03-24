@@ -71,6 +71,21 @@ public sealed class ModCache
     }
 
     /// <summary>
+    /// n!の乗法逆元(n!)^{-1}の値を返す。計算量: O(1)
+    /// </summary>
+    /// <param name="n"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public ModInt InverseFactorial(int n)
+    {
+        if (n < 0 || n >= _factorial.Length)
+        {
+            throw new InvalidOperationException("Invalid N");
+        }
+        return _inverseFactorial[n];
+    }
+
+    /// <summary>
     /// nの乗法逆元n^{-1}を返す。計算量: O(1)
     /// </summary>
     /// <param name="n"></param>
