@@ -1,25 +1,25 @@
 /// <summary>
-/// 素数mod上での畳み込み。
+/// 素数mod上での畳み込み。MODはNTT-Friendlyじゃないと使い物にならない。
 /// </summary>
-public sealed class Convolution
+public sealed class Convolution<T> where T : struct, IMod
 {
     private readonly long _mod;
-    private readonly long _primitiveRoot;
+    private readonly ModInt<T> _primitiveRoot;
     private readonly int _maxExp;
     private readonly long _factor;
-    private long[] _root;
-    private long[] _inverseRoot;
+    private ModInt<T>[] _root;
+    private ModInt<T>[] _inverseRoot;
 
     /// <summary>
-    /// 初期化。modはNTT-Friendlyじゃないと使い物にならない。計算量: modに依存するが軽い
+    /// 初期化。計算量: modに依存するがおそらく軽い
     /// </summary>
     /// <param name="mod"></param>
-    public Convolution(long mod = 998244353L)
+    public Convolution()
     {
-        _mod = mod;
-        _primitiveRoot = FindPrimitiveRoot(mod);
+        _mod = ModInt<T>.Mod;
+        _primitiveRoot = FindPrimitiveRoot(_mod);
         _maxExp = 0;
-        long mm = mod - 1;
+        long mm = _mod - 1;
         while ((mm & 1) == 0)
         {
             mm >>= 1;
@@ -27,40 +27,9 @@ public sealed class Convolution
         }
         _factor = mm;
 
-        _root = new long[_maxExp + 1];
-        _inverseRoot = new long[_maxExp + 1];
-        CalcRoot(_root);
-
-        for (int i = 0; i <= _maxExp; i++)
-        {
-            _inverseRoot[i] = Inverse(_root[i], _mod);
-        }
-    }
-
-    private static long Inverse(long a, long mod)
-    {
-        return CalcPow(a, mod - 2, mod);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long CalcPow(long b, long exp, long mod)
-    {
-        b %= mod;
-
-        long res = 1L;
-        while (exp > 0)
-        {
-            if ((exp & 1L) == 1L)
-            {
-                res *= b;
-                res %= mod;
-            }
-            b *= b;
-            b %= mod;
-            exp >>= 1;
-        }
-
-        return res;
+        _root = new ModInt<T>[_maxExp + 1];
+        _inverseRoot = new ModInt<T>[_maxExp + 1];
+        CalcRoot(_root, _inverseRoot);
     }
 
     private long FindPrimitiveRoot(long m)
@@ -94,12 +63,12 @@ public sealed class Convolution
 
         Span<long> divSpan = CollectionsMarshal.AsSpan(divisors);
 
-        for (long g = 2; g <= m; g++)
+        for (long g = 2; g < m; g++)
         {
             bool ok = true;
             for (int i = 0; i < divSpan.Length; i++)
             {
-                ok &= CalcPow(g, (m - 1) / divSpan[i], m) != 1L;
+                ok &= ModInt<T>.CreateFast(g).Power((m - 1) / divSpan[i]) != 1L;
             }
 
             if (ok)
@@ -111,67 +80,70 @@ public sealed class Convolution
         return -1;
     }
 
-    private void CalcRoot(long[] root)
+    private void CalcRoot(ModInt<T>[] root, ModInt<T>[] invroot)
     {
-        root[0] = 1L;
+        root[0] = ModInt<T>.CreateFast(1L);
+        invroot[0] = ModInt<T>.CreateFast(1L);
 
-        root[_maxExp] = CalcPow(_primitiveRoot, _factor, _mod);
+        root[_maxExp] = _primitiveRoot.Power(_factor);
+        invroot[_maxExp] = root[_maxExp].Inv();
         for (int i = _maxExp - 1; i >= 1; i--)
         {
-            root[i] = (root[i + 1] * root[i + 1]) % _mod;
+            root[i] = root[i + 1] * root[i + 1];
+            invroot[i] = invroot[i + 1] * invroot[i + 1];
         }
     }
     
-    private void ButterflyNTT(Span<long> target, int exp, long[] root)
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    private void ButterflyNTT(Span<ModInt<T>> target, int exp, Span<ModInt<T>> root)
     {
         if (target.Length == 1) return;
 
-        int n = target.Length;
         int k = exp;
         int r = 1 << (k - 1);
         for (int m = k; m > 0; m--) 
         {
-            for (int l = 0; l < n; l += (r << 1)) 
+            for (int l = 0; l < target.Length; l += (r << 1)) 
             {
-                long wi = 1;
+                ModInt<T> wi = ModInt<T>.One;
                 for (int i = 0; i < r; i++) 
                 {
-                    long temp = (target[l + i] + target[l + i + r]) % _mod;
-                    target[l + i + r] = (target[l + i] - target[l + i + r]) * wi % _mod;
+                    ModInt<T> temp = target[l + i] + target[l + i + r];
+                    target[l + i + r] = (target[l + i] - target[l + i + r]) * wi;
                     target[l + i] = temp;
-                    wi = wi * root[m] % _mod;
+                    wi *= root[m];
                 }
             }
             r >>= 1;
         }
     }
 
-    private void ButterflyINTT(Span<long> target, int exp, long[] root)
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    private void ButterflyINTT(Span<ModInt<T>> target, int exp, Span<ModInt<T>> root)
     {
-        if (target.Length == 1)
-            return;
-        int n = target.Length;
+        if (target.Length == 1) return;
+        
         int k = exp;
         int r = 1;
         for (int m = 1; m < k + 1; m++)
         {
-            for (int l = 0; l < n; l += (r << 1)) 
+            for (int l = 0; l < target.Length; l += (r << 1)) 
             {
-                long wi = 1;
+                ModInt<T> wi = ModInt<T>.One;
                 for (int i = 0; i < r; i++) 
                 {
-                    long temp = (target[l + i] + target[l + i + r] * wi) % _mod;
-                    target[l + i + r] = (target[l + i] - target[l + i + r] * wi) % _mod;
+                    ModInt<T> temp = target[l + i] + target[l + i + r] * wi;
+                    target[l + i + r] = target[l + i] - target[l + i + r] * wi;
                     target[l + i] = temp;
-                    wi = wi * root[m] % _mod;
+                    wi *= root[m];
                 }
             }
             r <<= 1;
         }
 
-        long ni = Inverse(n, _mod);
-        for (int i = 0; i < n; i++) {
-            target[i] = ((target[i] * ni % _mod) + _mod) % _mod;
+        ModInt<T> ni = ModInt<T>.CreateFast(target.Length).Inv();
+        for (int i = 0; i < target.Length; i++) {
+            target[i] *= ni;
         }
     }
 
@@ -182,27 +154,21 @@ public sealed class Convolution
     /// <param name="b"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public long[] CalcConvolution(long[] a, long[] b)
+    public ModInt<T>[] CalcConvolution(Span<ModInt<T>> a, Span<ModInt<T>> b)
     {
         int dsize = a.Length + b.Length;
 
-        int exp = 0;
-        while ((1 << exp) < dsize)
-        {
-            exp++;
-        }
+        int exp = BitOperations.Log2((uint)dsize);
+        if ((1 << exp) < dsize) exp++;
         int n = 1 << exp;
 
-        if (exp > _maxExp)
-        {
-            throw new InvalidOperationException("Data too large.");
-        }
+        Debug.Assert(exp <= _maxExp);
 
-        long[] buffer = new long[n];
-        long[] c = new long[n];
+        ModInt<T>[] buffer = new ModInt<T>[n];
+        ModInt<T>[] c = new ModInt<T>[n];
 
-        Array.Copy(a, 0, c, 0, a.Length);
-        Array.Copy(b, 0, buffer, 0, b.Length);
+        a.CopyTo(c);
+        b.CopyTo(buffer);
 
         ButterflyNTT(c, exp, _root);
         ButterflyNTT(buffer, exp, _root);
@@ -210,7 +176,6 @@ public sealed class Convolution
         for (int i = 0; i < n; i++)
         {
             c[i] *= buffer[i];
-            c[i] %= _mod;
         }
 
         ButterflyINTT(c, exp, _inverseRoot);
@@ -220,9 +185,7 @@ public sealed class Convolution
 
     private static long SafeMod(long x, long m)
     {
-        x %= m;
-        if (x < 0) x += m;
-        return x;
+        return x % m + ((x >> 63) & m);
     }
 
     private static long ExtEuclid(long a, long b, ref long p, ref long q)
