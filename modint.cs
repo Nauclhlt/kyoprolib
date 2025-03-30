@@ -1,120 +1,220 @@
-// 静的な底のmodint.
-// Constantsクラス内にある静的な定数Modを参照する.
-// @author Nauclhlt.
-public readonly struct ModInt
+/// <summary>
+/// 自動でmodをとる整数。必要ないならあんまり使いすぎないように。
+/// パフォーマンスはあまり良くないかもしれない。
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public readonly struct ModInt<T> :  IEquatable<ModInt<T>>, IAdditionOperators<ModInt<T>, ModInt<T>, ModInt<T>>, 
+                                    ISubtractionOperators<ModInt<T>, ModInt<T>, ModInt<T>>, 
+                                    IAdditiveIdentity<ModInt<T>, ModInt<T>>, IMultiplyOperators<ModInt<T>, ModInt<T>, ModInt<T>>, 
+                                    IDivisionOperators<ModInt<T>, ModInt<T>, ModInt<T>>
+                                    where T : struct, IMod
 {
-    private readonly long Value;
+    public static long Mod => _mod.Mod;
 
-    public static readonly ModInt Empty = new ModInt(0L);
+    private static readonly T _mod = default;
+
+    public readonly long Value;
+
+    /// <summary>
+    /// 1を返す。計算量: O(1)
+    /// </summary>
+    public static ModInt<T> One { get; } = CreateFast(1L);
+
+    /// <summary>
+    /// 0を返す。計算量: O(1)
+    /// </summary>
+    public static ModInt<T> Zero { get; } = CreateFast(0L);
+
+    /// <summary>
+    /// 加法単位元つまり0を返す。計算量: O(1)
+    /// </summary>
+    public static ModInt<T> AdditiveIdentity { get; } = CreateFast(0L);
 
     public ModInt(long value)
     {
         Value = SafeMod(value);
     }
 
+    private ModInt(long value, bool dummy)
+    {
+        Value = value;
+    }
+
+    /// <summary>
+    /// modintを構築する。0 <= value < MODのとき限定。速いはず。計算量: O(1)
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ModInt<T> CreateFast(long value)
+    {
+        return new ModInt<T>(value, false); 
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static long SafeMod(long a)
     {
-        a %= Constants.Mod;
-        if (a < 0) a += Constants.Mod;
-        return a;
+        return a % _mod.Mod + ((a >> 63) & _mod.Mod);
     }
 
-    // この値をexp乗した値を返す.
-    // O(log(exp))
-    public ModInt Power(long exp)
+    /// <summary>
+    /// exp乗を計算する。計算量: O(log(exp))
+    /// </summary>
+    /// <param name="exp"></param>
+    /// <returns></returns>
+    public readonly ModInt<T> Power(long exp)
     {
-        if (exp <= -1) return this;
-        if (exp == 0) return 1;
-        if (exp == 1) return this;
-
-        ModInt m = Power(exp / 2);
-        m *= m;
-        if (exp % 2 == 1) m *= this;
-
-        return m;
+        if (exp < 0)
+        {
+            return Power(-exp).Inv();
+        }
+        else
+        {
+            long res = 1L;
+            long b = Value;
+            while (exp > 0)
+            {
+                if ((exp & 1) == 1) res = res * b % _mod.Mod;
+                b = b * b % _mod.Mod;
+                exp >>= 1;
+            }
+            
+            return CreateFast(res);
+        }
     }
 
-    // 逆元を返す.
-    // modintの法をPとして, O(logP)
-    public ModInt Inv()
+    /// <summary>
+    /// 乗法逆元を返す。0は渡さない。計算量: O(logN)
+    /// </summary>
+    /// <returns></returns>
+    public readonly ModInt<T> Inv()
     {
-        return this.Power(Constants.Mod - 2L);
+        long x = 1, y = 0;
+        long x1 = 0, y1 = 1;
+        long b = _mod.Mod;
+        long a = Value;
+
+        while (b != 0)
+        {
+            long q = a / b;
+            long t = a % b;
+            a = b;
+            b = t;
+
+            long tx = x - q * x1;
+            long ty = y - q * y1;
+            x = x1;
+            y = y1;
+            x1 = tx;
+            y1 = ty;
+        }
+
+        return new (x);
     }
 
-    public static ModInt operator +(ModInt left, ModInt right)
+    [MethodImpl(256)]
+    public static ModInt<T> operator +(ModInt<T> left, ModInt<T> right)
     {
-        return new ModInt(SafeMod(left.Value + right.Value));
+        return CreateFast((left.Value + right.Value) % _mod.Mod);
     }
 
-    public static ModInt operator -(ModInt left, ModInt right)
+    [MethodImpl(256)]
+    public static ModInt<T> operator -(ModInt<T> left, ModInt<T> right)
     {
-        return new ModInt(SafeMod(left.Value - right.Value));
+        return CreateFast((left.Value - right.Value + _mod.Mod) % _mod.Mod);
     }
 
-    public static ModInt operator *(ModInt left, ModInt right)
+    [MethodImpl(256)]
+    public static ModInt<T> operator *(ModInt<T> left, ModInt<T> right)
     {
-        return new ModInt(SafeMod(left.Value * right.Value));
+        return CreateFast(left.Value * right.Value % _mod.Mod);
     }
 
-    public static ModInt operator /(ModInt left, ModInt right)
+    [MethodImpl(256)]
+    public static ModInt<T> operator /(ModInt<T> left, ModInt<T> right)
     {
         if (right.Value == 0L)
         {
-            return Empty;
+            throw new DivideByZeroException();
         }
 
-        ModInt inv = right.Inv();
-        return SafeMod(left * inv);
+        ModInt<T> inv = right.Inv();
+        return CreateFast(left.Value * inv.Value % _mod.Mod);
     }
 
-    public static ModInt operator %(ModInt left, ModInt right)
+    [MethodImpl(256)]
+    public static bool operator ==(in ModInt<T> left, in ModInt<T> right)
     {
-        if (right.Value == 0L)
+        return left.Value == right.Value;
+    }
+
+    [MethodImpl(256)]
+    public static bool operator != (in ModInt<T> left, in ModInt<T> right)
+    {
+        return !(left == right);
+    }
+
+    [MethodImpl(256)]
+    public bool Equals(ModInt<T> other)
+    {
+        return Value == other.Value;
+    }
+
+    [MethodImpl(256)]
+    public override bool Equals(object other)
+    {
+        if (other is ModInt<T> m)
         {
-            return Empty;
+            return this == m;
         }
-
-        return new ModInt(SafeMod(left.Value % right.Value));
+        else return false;
     }
 
-    public static implicit operator ModInt(long v)
+    [MethodImpl(256)]
+    public override int GetHashCode()
     {
-        return new ModInt(v);
+        return Value.GetHashCode();
     }
 
-    public static implicit operator ModInt(int v)
+    [MethodImpl(256)]
+    public static implicit operator ModInt<T>(long v)
     {
-        return new ModInt(v);
+        return new ModInt<T>(v);
     }
 
-    public static implicit operator long(ModInt m)
+    [MethodImpl(256)]
+    public static implicit operator ModInt<T>(int v)
+    {
+        return new ModInt<T>(v);
+    }
+
+    [MethodImpl(256)]
+    public static implicit operator long(in ModInt<T> m)
     {
         return m.Value;
     }
 
-    public static implicit operator int(ModInt m)
+    [MethodImpl(256)]
+    public static implicit operator int(in ModInt<T> m)
     {
         return (int)m.Value;
-    }
-
-    // nCrを計算する.
-    // O(r)
-    public static ModInt Combination(long n, long r)
-    {
-        ModInt c = 1;
-        for (ModInt i = 1; i <= r; i++)
-        {
-            c = c * (n - i + 1) / i;
-        }
-        return c;
     }
 
     public override string ToString()
     {
         return Value.ToString();
     }
-
-    // 中身の値を取得する.
-    public long Raw() => Value;
 }
+
+/// <summary>
+/// 法を指定するやつ。
+/// </summary>
+public interface IMod
+{
+    public long Mod { get; }
+}
+
+public readonly struct Mod998244353 : IMod { public long Mod => 998244353L; }
+public readonly struct Mod1000000007 : IMod { public long Mod => 1000000007L; }
+public readonly struct Mod897581057 : IMod { public long Mod => 897581057; }
+public readonly struct Mod880803841 : IMod { public long Mod => 880803841; }
