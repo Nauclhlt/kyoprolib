@@ -1,85 +1,43 @@
-// AVL木, 平衡二分探索木set.
-// 参考: https://zenn.dev/student_blog/articles/670eee14e04d46
+// 平衡二分探索木set.
 public sealed class Set<T> where T : IComparable<T>
 {
     private sealed class Node
     {
-        private T _value;
-        private Node _left;
-        private Node _right;
-        private int _bias;
-        private int _height;
-        private int _size;
+        public T Key;
+        public double Priority;
+        public Node Left;
+        public Node Right;
+        public int Size;
 
-        public bool Has2Children => _left is not null && _right is not null;
-        public bool HasOnlyLeft => _left is not null && _right is null;
-        public bool HasOnlyRight => _left is null && _right is not null;
-        public bool HasNoChild => _left is null && _right is null;
-
-        public Node(T value)
+        public Node(T key, double priority)
         {
-            _value = value;
-            _left = null;
-            _right = null;
-            _bias = 0;
-            _height = 1;
-            _size = 1;
+            Key = key;
+            Priority = priority;
+            Left = null;
+            Right = null;
+            Size = 1;
         }
 
-        public T Value
-        {
-            get => _value;
-            set => _value = value;
-        }
-
-        public Node Left
-        {
-            get => _left;
-            set => _left = value;
-        }
-
-        public Node Right
-        {
-            get => _right;
-            set => _right = value;
-        }
-
-        public int Bias
-        {
-            get => _bias;
-            set => _bias = value;
-        }
-
-        public int Height
-        {
-            get => _height;
-            set => _height = value;
-        }
-
-        public int Size
-        {
-            get => _size;
-            set => _size = value;
-        }
-
-        public int LeftHeight() => _left is not null ? _left.Height : 0;
-        public int RightHeight() => _right is not null ? _right.Height : 0;
-        public int LeftSize() => _left is not null ? _left.Size : 0;
-        public int RightSize() => _right is not null ? _right.Size : 0;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int LeftSize() => Left is not null ? Left.Size : 0;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int RightSize() => Right is not null ? Right.Size : 0;
     }
 
     private Node _rootNode = null;
+    private Random _random;
 
-    public int Count => SizeOf(_rootNode);
+    public int Count => _rootNode is not null ? _rootNode.Size : 0;
 
     public Set()
     {
         _rootNode = null;
+        _random = new();
     }
 
     public void Add(T value)
     {
-        _rootNode = AddRecursive(_rootNode, value);
+        _rootNode = AddRecursive(_rootNode, new Node(value, _random.NextDouble()));
     }
 
     public void Remove(T value)
@@ -87,227 +45,73 @@ public sealed class Set<T> where T : IComparable<T>
         _rootNode = RemoveRecursive(_rootNode, value);
     }
 
-    private Node RemoveRecursive(Node current, T value)
+    private Node RemoveRecursive(Node current, T key)
     {
         if (current is null)
         {
             return null;
         }
 
-        if (current.Value.CompareTo(value) == 0)
+        int comp = key.CompareTo(current.Key);
+        if (comp == -1)
         {
-            // 消す
-            return InternalRemoveNode(current);
+            current.Left = RemoveRecursive(current.Left, key);
         }
-
-        if (value.CompareTo(current.Value) == -1)
+        else if (comp == 1)
         {
-            current.Left = RemoveRecursive(current.Left, value);
-
-            Update(current.Left);
-            Update(current);
-            current = Balance(current);
-
-            Update(current);
-
-            return current;
+            current.Right = RemoveRecursive(current.Right, key);
         }
         else
         {
-            current.Right = RemoveRecursive(current.Right, value);
+            if (current.Left is null) return current.Right;
+            if (current.Right is null) return current.Left;
 
-            Update(current.Right);
-            Update(current);
-
-            current = Balance(current);
-
-            Update(current);
-
-            return current;
-        }
-    }
-
-    private Node InternalRemoveNode(Node target)
-    {
-        if (target.Has2Children)
-        {
-            Node max = GetMaxNode(target.Left);
-            T val = max.Value;
-            
-            if (target.Left == max)
+            if (current.Left.Priority > current.Right.Priority)
             {
-                target.Left = target.Left.Left;
+                current = RotateRight(current);
+                current.Right = RemoveRecursive(current.Right, key);
             }
             else
             {
-                target.Left = DeleteRightNode(target.Left, max);
+                current = RotateLeft(current);
+                current.Left = RemoveRecursive(current.Left, key);
             }
-            
-            target.Value = val;
-
-            Update(target.Left);
-            Update(target.Right);
-
-            Update(target);
-            target = Balance(target);
-
-            Update(target);
-
-            return target;
-        }
-        else if (target.HasOnlyLeft)
-        {
-            target = target.Left;
-
-            Update(target.Left);
-            Update(target.Right);
-            Update(target);
-
-            target = Balance(target);
-
-            Update(target);
-
-            return target;
-        }
-        else if (target.HasOnlyRight)
-        {
-            target = target.Right;
-
-            Update(target.Left);
-            Update(target.Right);
-            Update(target);
-
-            target = Balance(target);
-
-            Update(target);
-
-            return target;
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    private Node AddRecursive(Node current, T value)
-    {
-        if (current is null)
-        {
-            current = new Node(value);
-            
-            Update(current);
-
-            return current;
         }
 
-        if (value.CompareTo(current.Value) == -1)
-        {
-            current.Left = AddRecursive(current.Left, value);
-
-            Update(current.Left);
-            Update(current);
-
-            current = Balance(current);
-
-            Update(current);
-        }
-        else
-        {
-            current.Right = AddRecursive(current.Right, value);
-
-            Update(current.Right);
-            Update(current);
-
-            current = Balance(current);
-
-            Update(current);
-        }
+        Update(current);
 
         return current;
     }
 
-    private Node Balance(Node node)
+    private Node AddRecursive(Node current, Node node)
     {
-        if (node.Bias == 0)
+        if (current is null)
         {
             return node;
         }
 
-        if (node.Bias == 1 || node.Bias == -1)
+        if (node.Key.CompareTo(current.Key) == -1)
         {
-            return node;
-        }
+            current.Left = AddRecursive(current.Left, node);
 
-        if (node.Bias >= 2)
-        {
-            if (node.Left.Bias > 0)
+            if (current.Left.Priority > current.Priority)
             {
-                node = RotateRight(node);
-                node.Bias = 0;
-                return node;
-            }
-            else
-            {
-                node.Left = RotateLeft(node.Left);
-                node = RotateRight(node);
-                node.Bias = 0;
-                return node;
+                current = RotateRight(current);
             }
         }
         else
         {
-            if (node.Right.Bias < 0)
+            current.Right = AddRecursive(current.Right, node);
+
+            if (current.Right.Priority > current.Priority)
             {
-                node = RotateLeft(node);
-                node.Bias = 0;
-                return node;
-            }
-            else
-            {
-                node.Right = RotateRight(node.Right);
-                node = RotateLeft(node);
-                node.Bias = 0;
-                return node;
+                current = RotateLeft(current);
             }
         }
-    }
 
-    private Node DeleteRightNode(Node root, Node target)
-    {
-        if (root is null) return null;
+        Update(current);
 
-        if (root.Right == target)
-        {
-            root.Right = root.Right.Left;
-            Update(root.Right);
-            Update(root);
-
-            root = Balance(root);
-
-            Update(root);
-
-            return root;
-        }
-        else
-        {
-            int sz = root.Size;
-            root.Right = DeleteRightNode(root.Right, target);
-            
-
-            Update(root.Right);
-            Update(root.Left);
-            Update(root);
-            root = Balance(root);
-
-            if (sz - root.Size == 2)
-            {
-                Console.WriteLine("ERR");
-            }
-
-            Update(root);
-
-            return root;
-        }
+        return current;
     }
 
     private Node GetMaxNode(Node node)
@@ -326,7 +130,6 @@ public sealed class Set<T> where T : IComparable<T>
         return cur;
     }
 
-    // 新しい部分木の根を返す
     private Node RotateLeft(Node node)
     {
         Node right = node.Right;
@@ -340,7 +143,6 @@ public sealed class Set<T> where T : IComparable<T>
         return right;
     }
 
-    // 新しい部分木の根を返す
     private Node RotateRight(Node node)
     {
         Node left = node.Left;
@@ -350,47 +152,31 @@ public sealed class Set<T> where T : IComparable<T>
         Update(left.Left);
         Update(left.Right);
         Update(left);
-        
+
 
         return left;
     }
 
+    [MethodImpl(256)]
     private void Update(Node node)
     {
         if (node is null) return;
 
-        node.Height = HeightOf(node);
-        node.Size = SizeOf(node);
-        node.Bias = node.LeftHeight() - node.RightHeight();
-    }
-
-    private int HeightOf(Node node)
-    {
-        if (node is null) return 0;
-
-        int left = node.LeftHeight();
-        int right = node.RightHeight();
-
-        return int.Max(left, right) + 1;
-    }
-
-    private int SizeOf(Node node)
-    {
-        if (node is null) return 0;
-
         int left = node.LeftSize();
         int right = node.RightSize();
 
-        return left + right + 1;
+        node.Size = left + right + 1;
     }
 
     public void PrintTree()
     {
-        static void PrintNode(Node node, int depth)
+        int calls = 0;
+        void PrintNode(Node node, int depth)
         {
             if (node is null) return;
+            calls++;
             PrintNode(node.Right, depth + 1);
-            Console.WriteLine(new string('\t', depth) + node.Value + $"({node.Bias}; {node.Height}; {node.Size})");
+            Console.WriteLine(new string('\t', depth) + node.Key + $"({node.Size})");
             PrintNode(node.Left, depth + 1);
         }
 
@@ -408,7 +194,7 @@ public sealed class Set<T> where T : IComparable<T>
             }
             else
             {
-                return GetMaxNode(_rootNode).Value;
+                return GetMaxNode(_rootNode).Key;
             }
         }
     }
@@ -422,7 +208,7 @@ public sealed class Set<T> where T : IComparable<T>
             }
             else
             {
-                return GetMinNode(_rootNode).Value;
+                return GetMinNode(_rootNode).Key;
             }
         }
     }
@@ -433,9 +219,9 @@ public sealed class Set<T> where T : IComparable<T>
 
         while (current is not null)
         {
-            if (current.Value.CompareTo(value) == 0) return true;
+            if (current.Key.CompareTo(value) == 0) return true;
 
-            if (value.CompareTo(current.Value) == -1) current = current.Left;
+            if (value.CompareTo(current.Key) == -1) current = current.Left;
             else current = current.Right;
         }
 
@@ -453,7 +239,27 @@ public sealed class Set<T> where T : IComparable<T>
             throw new IndexOutOfRangeException();
         }
 
-        return GetByIndexRecursive(_rootNode, index);
+        Node current = _rootNode;
+        int left = 0;
+        while (current is not null)
+        {
+            int center = left + current.LeftSize();
+            if (center == index)
+            {
+                return current.Key;
+            }
+            else if (center < index)
+            {
+                left += current.LeftSize() + 1;
+                current = current.Right;
+            }
+            else
+            {
+                current = current.Left;
+            }
+        }
+
+        return default;
     }
 
     public void RemoveByIndex(int index)
@@ -467,66 +273,42 @@ public sealed class Set<T> where T : IComparable<T>
         _rootNode = RemoveByIndexRecursive(_rootNode, index);
     }
 
-    private Node RemoveByIndexRecursive(Node current, int offset)
+    private Node RemoveByIndexRecursive(Node current, int index)
     {
         if (current is null)
         {
-            Console.WriteLine($"! current was null. offset={offset}  count={Count}");
-            return default;
+            return null;
         }
-        
+
         int left = current.LeftSize();
 
-        if (left == offset)
+        if (index < left)
         {
-            return InternalRemoveNode(current);
+            current.Left = RemoveByIndexRecursive(current.Left, index);
         }
-        if (offset < left)
+        else if (index > left)
         {
-            current.Left = RemoveByIndexRecursive(current.Left, offset);
-
-            Update(current);
-
-            current = Balance(current);
-
-            Update(current);
-
-            return current;
+            current.Right = RemoveByIndexRecursive(current.Right, index - left - 1);
         }
-        else
-        {
-            current.Right = RemoveByIndexRecursive(current.Right, offset - left - 1);
+        else {
+            if (current.Left is null) return current.Right;
+            if (current.Right is null) return current.Left;
 
-            Update(current);
+            if (current.Left.Priority > current.Right.Priority)
+            {
+                current = RotateRight(current);
+                current.Right = RemoveByIndexRecursive(current.Right, index - left);
+            }
+            else
+            {
+                current = RotateLeft(current);
+                current.Left = RemoveByIndexRecursive(current.Left, index);
+            }
+        }
 
-            current = Balance(current);
+        Update(current);
 
-            Update(current);
-
-            return current;
-        }
-    }
-
-    private T GetByIndexRecursive(Node current, int offset)
-    {
-        if (current is null)
-        {
-            Console.WriteLine($"! current was null. offset={offset}  count={Count}");
-            return default;
-        }
-        int left = current.LeftSize();
-        if (left == offset)
-        {
-            return current.Value;
-        }
-        if (offset < left)
-        {
-            return GetByIndexRecursive(current.Left, offset);
-        }
-        else
-        {
-            return GetByIndexRecursive(current.Right, offset - left - 1);
-        }
+        return current;
     }
 
     public int IndexOf(T value)
@@ -536,8 +318,7 @@ public sealed class Set<T> where T : IComparable<T>
 
         while (true)
         {
-            // left
-            int c = value.CompareTo(current.Value);
+            int c = value.CompareTo(current.Key);
             if (c == -1)
             {
                 if (current.Left is null) return -1;
@@ -571,11 +352,11 @@ public sealed class Set<T> where T : IComparable<T>
 
         while (true)
         {
-            int cmp = value.CompareTo(current.Value);
+            int cmp = value.CompareTo(current.Key);
             if (cmp <= 0)
             {
                 res = int.Min(res, index);
-                lowerbound = current.Value;
+                lowerbound = current.Key;
                 if (current.Left is null) break;
                 index -= current.Left.RightSize() + 1;
                 current = current.Left;
@@ -601,7 +382,7 @@ public sealed class Set<T> where T : IComparable<T>
 
         while (true)
         {
-            int cmp = value.CompareTo(current.Value);
+            int cmp = value.CompareTo(current.Key);
             if (cmp <= 0)
             {
                 res = int.Min(res, index);
@@ -618,32 +399,6 @@ public sealed class Set<T> where T : IComparable<T>
         }
 
         return res;
-
-        // Node root = _rootNode;
-
-        // var torg = root;
-        // if (root is null) return -1;
-
-        // var idx = root.Size - root.RightSize() - 1;
-        // var ret = Int32.MaxValue;
-        // while (root is not null)
-        // {
-        //     if (root.Value.CompareTo(value) >= 0)
-        //     {
-        //         if (root.Value.CompareTo(value) == 0) ret = int.Min(ret, idx);
-        //         root = root.Left;
-        //         if (root == null) ret = Math.Min(ret, idx);
-        //         idx -= root is null ? 0 : (root.RightSize() + 1);
-        //     }
-        //     else
-        //     {
-        //         root = root.Right;
-        //         idx += (root is null ? 1 : root.LeftSize() + 1);
-        //         if (root == null) return idx;
-        //     }
-        // }
-
-        // return ret == Int32.MaxValue ? torg.Size : ret;
     }
 
     public List<T> OrderAscending()
@@ -656,9 +411,11 @@ public sealed class Set<T> where T : IComparable<T>
         {
             if (node is null) return;
             extract(node.Left);
-            res.Add(node.Value);
+            res.Add(node.Key);
             extract(node.Right);
         }
+
+        extract(_rootNode);
 
         return res;
     }
@@ -673,9 +430,11 @@ public sealed class Set<T> where T : IComparable<T>
         {
             if (node is null) return;
             extract(node.Right);
-            res.Add(node.Value);
+            res.Add(node.Key);
             extract(node.Left);
         }
+
+        extract(_rootNode);
 
         return res;
     }
