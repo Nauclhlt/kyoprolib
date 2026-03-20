@@ -1,5 +1,5 @@
 // 区間に対する操作と区間に対するクエリを処理する.
-// 空間計算量: O(4N)
+// 空間計算量: O(N)
 // 時間計算量:
 // - 構築: O(N)
 // - 操作: O(logN)
@@ -24,7 +24,7 @@ public sealed class LazySegmentTree<T, M> where T : struct, IEquatable<T>  where
     {
         get
         {
-            return GetByIndex(index);
+            return Access(index);
         }
     }
 
@@ -70,6 +70,7 @@ public sealed class LazySegmentTree<T, M> where T : struct, IEquatable<T>  where
         {
             return;
         }
+        
         if (index < _dataSize - 1)
         {
             _lazy[(index << 1) + 1] = GuardComposition(_lazy[(index << 1) + 1], _lazy[index]);
@@ -96,12 +97,17 @@ public sealed class LazySegmentTree<T, M> where T : struct, IEquatable<T>  where
     {
         Evaluate(index, l, r);
 
+        if (a >= r || b <= l)
+        {
+            return;
+        }
+
         if (a <= l && r <= b)
         {
             _lazy[index] = GuardComposition(_lazy[index], m);
             Evaluate(index, l, r);
         }
-        else if (a < r && l < b)
+        else
         {
             ApplyRec(a, b, m, (index << 1) + 1, l, (l + r) / 2);
             ApplyRec(a, b, m, (index << 1) + 2, (l + r) / 2, r);
@@ -109,12 +115,12 @@ public sealed class LazySegmentTree<T, M> where T : struct, IEquatable<T>  where
         }
     }
 
-    public void Apply(int left, int right, M m)
+    public void Update(int left, int right, M m)
     {
         ApplyRec(left, right, m, 0, 0, _dataSize);
     }
 
-    public T Query(int left, int right)
+    public T Fold(int left, int right)
     {
         return QueryRec(left, right, 0, 0, _dataSize);
     }
@@ -139,7 +145,7 @@ public sealed class LazySegmentTree<T, M> where T : struct, IEquatable<T>  where
         return _operator(leftChild, rightChild);
     }
 
-    public T GetByIndex(int target)
+    public T Access(int target)
     {
         if (target < 0 || target >= _originalDataSize)
         {
