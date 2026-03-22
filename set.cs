@@ -290,14 +290,15 @@ public sealed class Set<T> where T : IComparable<T>
         {
             current.Right = RemoveByIndexRecursive(current.Right, index - left - 1);
         }
-        else {
+        else
+        {
             if (current.Left is null) return current.Right;
             if (current.Right is null) return current.Left;
 
             if (current.Left.Priority > current.Right.Priority)
             {
                 current = RotateRight(current);
-                current.Right = RemoveByIndexRecursive(current.Right, index - left);
+                current.Right = RemoveByIndexRecursive(current.Right, index - current.LeftSize() - 1);
             }
             else
             {
