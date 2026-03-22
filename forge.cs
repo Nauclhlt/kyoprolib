@@ -27,4 +27,30 @@ public static class Forge
         Array.Reverse(chars);
         return new(chars);
     }
+
+    public static int[] CalcZArray(string s)
+    {
+        int length = s.Length;
+        int[] z = new int[length];
+        z[0] = length;
+        int l = 0;
+        int r = 0;
+        for (int i = 1; i < length; i++)
+        {
+            if (z[i - l] < r - i)
+            {
+                z[i] = z[i - l];
+            }
+            else
+            {
+                r = int.Max(r, i);
+                while (r < length && s[r] == s[r - i])
+                    r += 1;
+                z[i] = r - i;
+                l = i;
+            }
+        }
+
+        return z;
+    }
 }
