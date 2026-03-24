@@ -75,6 +75,69 @@ public abstract class GraphBase<T> where T : struct, INumber<T>, IMinMaxValue<T>
         return map;
     }
 
+    public T[] ImplicitDijkstraFrom(int n)
+    {
+        if (!Validate(n)) return null;
+
+        T[] map = new T[_vertexCount];
+        Array.Fill(map, T.MaxValue);
+
+        map[n] = T.Zero;
+
+        PriorityQueue<(int, T), T> pq = new();
+
+        pq.Enqueue((n, T.Zero), T.Zero);
+
+        while (pq.Count > 0)
+        {
+            (int p, T d) = pq.Dequeue();
+
+            if (map[p] < d) continue;
+
+            List<Edge<T>> children = _adjList[p];
+            for (int i = 0; i < children.Count; i++)
+            {
+                T w = map[p] + children[i].Weight;
+                if (w < map[children[i].To])
+                {
+                    map[children[i].To] = w;
+                    pq.Enqueue((children[i].To, map[children[i].To]), map[children[i].To]);
+                }
+            }
+        }
+
+        return map;
+    }
+
+    public bool BellmannFordFrom(int n, out T[] map)
+    {
+        map = new T[_vertexCount];
+        Array.Fill(map, T.MaxValue);
+
+        map[n] = T.Zero;
+
+        for (int i = 0; i < _vertexCount; i++)
+        {
+            for (int j = 0; j < _directionAwareEdges.Count; j++)
+            {
+                Edge<T> e = _directionAwareEdges[j];
+                if (map[e.From] == T.MaxValue) continue;
+                T w = map[e.From] + e.Weight;
+                if (w < map[e.To])
+                {
+                    map[e.To] = w;
+
+                    if (i == _vertexCount - 1)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     public T[,] WarshallFloyd()
     {
         if (_vertexCount > 800)
